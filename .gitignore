@@ -1,6 +1,7 @@
 application.db
 .env
 __pycache__/ 
-venv/*
+env/*
 *.pyc
 ./.vscode
+sandbox/*

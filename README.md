@@ -2,6 +2,10 @@
 Skeleton universal project (back-end) including:
 - OAuth2 authentication
 
+## TODO
+- add in repo
+- imports dans les __init__
+
 ## Heroku commands
 
 ### Deploy

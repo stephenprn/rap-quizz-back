@@ -1,6 +1,6 @@
 import os
 import hashlib
-from base64 import b64decode, b64encode
+from base64 import b64encode
 
 
 def generate_random_salt():
@@ -22,9 +22,13 @@ def check_password(pw_input: str, salt: str, pw_hashed: str):
 
 
 def __hash_pw_salt(password: str, salt: str):
-    return str(b64encode(hashlib.pbkdf2_hmac(
-        'sha256',
-        password.encode('utf-8'),  # Convert the password to bytes
-        salt.encode('utf-8'),
-        100000
-    )))
+    return str(
+        b64encode(
+            hashlib.pbkdf2_hmac(
+                "sha256",
+                password.encode("utf-8"),  # Convert the password to bytes
+                salt.encode("utf-8"),
+                100000,
+            )
+        )
+    )

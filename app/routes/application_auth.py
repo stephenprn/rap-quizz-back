@@ -2,8 +2,8 @@ from flask import Blueprint, request
 from flask_jwt import jwt_required
 from json import dumps
 
-from shared.db import db
-from services import service_auth
+from app.shared.db import db
+from app.services import service_auth
 
 application_auth = Blueprint("application_auth", __name__)
 
@@ -28,6 +28,7 @@ def register():
 
 # this endpoint will return a 409 code if username is taken, 200 if not
 
+
 @application_auth.route("/check-username", methods=["POST"])
 def check_username():
     username = request.json.get("username")
@@ -37,6 +38,7 @@ def check_username():
 
 
 # this endpoint will return a 401 code if token is invalid, 200 if valid
+
 
 @application_auth.route("/check-logged")
 @jwt_required()
