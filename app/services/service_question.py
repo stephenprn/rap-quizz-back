@@ -19,7 +19,6 @@ LABEL_MIN_LENGTH = 8
 LABEL_MAX_LENGTH = 100
 
 
-@to_json()
 def add(label: str, response_uuid: str):
     check_length(label, "Label", LABEL_MIN_LENGTH, LABEL_MAX_LENGTH)
 

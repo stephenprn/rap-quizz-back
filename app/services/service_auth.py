@@ -70,9 +70,6 @@ def authenticate(email: str, password: str):
     if not check_password(password, user.salt, user.password):
         return None
 
-    # prevent password and salt to be accessible after authentication
-    db.session.expire(user)
-
     return user
 
 
@@ -80,8 +77,5 @@ def identity(payload):
     user_id = payload["identity"]
 
     user = db.session.query(User).filter_by(id=user_id).first()
-
-    # prevent password and salt to be accessible after authentication
-    db.session.expire(user)
 
     return user

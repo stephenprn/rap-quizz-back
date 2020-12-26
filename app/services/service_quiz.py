@@ -7,7 +7,7 @@ from typing import List
 
 import app.models
 
-from app.utils.utils_string import normalize_string, check_length
+from app.utils.utils_string import normalize_string, check_length, generate_random_string
 from app.utils.utils_date import get_current_date_string
 
 from app.repositories import QuestionRepository
@@ -16,12 +16,11 @@ from app.repositories import QuizRepository
 from app.repositories import UserQuizRepository
 from app.repositories import QuizQuestionRepository
 
+from app.services import service_quiz_socket
+
 from app.shared.db import db
 from app.shared.annotations import to_json, convert_to_dict, convert_to_json
 
-from app.models import Quiz
-from app.models import Question
-from app.models import Response
 from app.models import (
     UserQuiz,
     QuizQuestion,
@@ -29,6 +28,8 @@ from app.models import (
     QuestionResponse,
     QuizQuestionResponse,
     QuestionResponseStatus,
+    Quiz, QuizStatus,
+    Question, Response
 )
 
 repo_quiz = QuizRepository()
@@ -44,9 +45,9 @@ NAME_MAX_LENGTH = 100
 
 QUIZ_DEFAULT_NBR_QUESTIONS = 10
 QUIZ_DEFAULT_NBR_ADDITIONAL_RESPONSES = 3
+QUIZ_URL_RANDOM_STR_LENGTH = 6
 
 
-@to_json(paginated=True)
 def get_quizzes_list(nbr_results: int, page_nbr: int):
     res = (
         db.session.query(Quiz)
@@ -72,10 +73,10 @@ def generate_quiz(name: str = None, nbr_questions: int = QUIZ_DEFAULT_NBR_QUESTI
     db.session.add(user_quiz)
     db.session.commit()
 
-    questions, questions_dict = __generate_questions(quiz, nbr_questions)
+    __generate_questions(quiz, nbr_questions)
 
     quiz_dict = convert_to_dict(quiz)
-    quiz_dict["questions"] = [questions_dict[0]]
+    quiz_dict["questions"] = []
 
     return convert_to_json(quiz_dict)
 
@@ -103,8 +104,27 @@ def answer_reponse(
     )
 
 
-def resume_quiz(quiz_url: str):
-    print("cldknsc")
+@to_json()
+def join_quiz(quiz_url: str):
+    quiz = repo_quiz.get_one_by_url(quiz_url, with_users=True)
+
+    if quiz == None:
+        abort(404, 'Quiz not found')
+    elif quiz.status == QuizStatus.ONGOING:
+        abort(400, 'Quiz already started')
+    elif quiz.status == QuizStatus.FINISHED:
+        abort(400, 'Quiz already finished')
+    
+    user_quiz = UserQuiz(
+        current_identity.id,
+        quiz.id,
+        UserQuizStatus.PLAYER
+    )
+
+    db.session.add(user_quiz)
+    db.session.commit()
+
+    return quiz
 
 
 def __generate_questions(
@@ -113,7 +133,6 @@ def __generate_questions(
     questions = repo_question.get_random_for_quiz(
         nbr_questions, exclude_questions_ids=exclude_questions_ids
     )
-    questions_dict = []
 
     for index, question in enumerate(questions):
         false_questions_responses = __generate_false_responses(question)
@@ -130,20 +149,17 @@ def __generate_questions(
             db.session.add(quiz_question_response)
             db.session.commit()
 
-        questions_dict.append(
-            __generate_question_dict(question, false_questions_responses)
-        )
-
     db.session.commit()
 
-    return questions, questions_dict
+    return questions
 
 
 def __generate_question_dict(
     question: Question, false_questions_responses: List[QuestionResponse]
 ):
     question_dict = convert_to_dict(question)
-    question_dict["responses"].extend(convert_to_dict(false_questions_responses))
+    question_dict["responses"].extend(
+        convert_to_dict(false_questions_responses))
 
     shuffle(question_dict["responses"])
 
@@ -161,11 +177,9 @@ def __generate_false_responses(question: Question):
 def __generate_unique_url(name: str):
     url_base = normalize_string(name, replace_spaces=URL_SEPARATOR)
     url = url_base
-
-    url_index = 0
+    url_sufix = generate_random_string(QUIZ_URL_RANDOM_STR_LENGTH)
 
     while db.session.query(Quiz.id).filter_by(url=url).scalar() is not None:
-        url_index += 1
-        url = url_base + URL_SEPARATOR + str(url_index)
+        url = url_base + URL_SEPARATOR + url_sufix
 
     return url

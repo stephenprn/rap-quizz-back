@@ -2,7 +2,7 @@ from flask import Blueprint, request, Response
 from flask_jwt import jwt_required
 
 from app.services import service_quiz
-from app.shared.annotations import pagination
+from app.shared.annotations import pagination, to_json
 
 application_quiz = Blueprint("application_quiz", __name__)
 
@@ -17,6 +17,7 @@ def hello():
 
 @application_quiz.route("/quizzes-list")
 @pagination(20)
+@to_json(paginated=True)
 def get_quizzes_list(nbr_results: int, page_nbr: int):
     return service_quiz.get_quizzes_list(nbr_results, page_nbr)
 
@@ -30,9 +31,10 @@ def generate_quiz():
     return service_quiz.generate_quiz()
 
 
-@application_quiz.route("/resume-quiz/<quiz_url>")
-def resume_quiz(quiz_url: str):
-    return service_quiz.resume_quiz(quiz_url)
+@application_quiz.route("/join-quiz/<quiz_url>")
+@jwt_required()
+def join_quiz(quiz_url: str):
+    return service_quiz.join_quiz(quiz_url)
 
 
 @application_quiz.route("/answer-response/<quiz_url>", methods=["POST"])

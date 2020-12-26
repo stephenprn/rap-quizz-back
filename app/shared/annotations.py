@@ -1,5 +1,4 @@
-from flask import request, abort
-from json import dumps
+from flask import request, abort, json
 from functools import wraps
 
 from app.utils.utils_json import default_handler
@@ -78,6 +77,6 @@ def convert_to_dict(res, paginated=False):
 
 def convert_to_json(res_dict, paginated=False):
     if res_dict != None:
-        return dumps(res_dict, default=default_handler, sort_keys=True)
+        return json.dumps(res_dict, default=default_handler, sort_keys=True)
 
     return None

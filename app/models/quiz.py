@@ -1,8 +1,14 @@
 from sqlalchemy.orm import relationship
+import enum
 
 from app.shared.db import db
 from app.shared.model import ModelBase
 from app.utils import utils_date, utils_hash
+
+class QuizStatus(enum.Enum):
+    WAITING = "WAITING"
+    ONGOING = "ONGOING"
+    FINISHED = "FINISHED"
 
 
 class Quiz(ModelBase):
@@ -17,6 +23,7 @@ class Quiz(ModelBase):
     users = relationship("UserQuiz", back_populates="quiz")
     questions = relationship("QuizQuestion", back_populates="quiz")
 
+    status = db.Column(db.Enum(QuizStatus), nullable=False)
     hidden = db.Column(db.Boolean, default=False)
 
     def __init__(
@@ -26,3 +33,4 @@ class Quiz(ModelBase):
         self.url = url
         self.nbr_questions = nbr_questions
         self.description = description
+        self.status = QuizStatus.WAITING

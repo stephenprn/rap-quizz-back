@@ -1,4 +1,4 @@
-from .quiz import Quiz
+from .quiz import Quiz, QuizStatus
 from .user import User, UserRole
 from .question import Question
 from .response import Response, ResponseType

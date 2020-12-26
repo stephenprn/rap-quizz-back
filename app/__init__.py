@@ -7,6 +7,7 @@ from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
 from app.shared.db import db
+from app.shared.socketio import socketio
 from app.services.service_admin import init_users
 from app.services.service_auth import authenticate, identity
 
@@ -23,6 +24,14 @@ def create_app():
     app.config["JWT_AUTH_USERNAME_KEY"] = environ.get("JWT_AUTH_USERNAME_KEY")
 
     db.init_app(app)
+
+    @app.before_first_request
+    def before_first_request():
+        if app.env == 'development':
+            from app.setup_dev import init_test_users, init_test_questions
+
+            init_test_users()
+            init_test_questions()
 
     with app.app_context():
         # blueprints init
@@ -41,23 +50,9 @@ def create_app():
 
         CORS(app)
         JWT(app, authenticate, identity)
+        
+        socketio.init_app(app, cors_allowed_origins="*")
 
-        # @app.errorhandler(Exception)
-        # def handle_error(e):
-        #     code = 500
-
-        #     if isinstance(e, HTTPException):
-        #         code = e.code
-
-        #     try:
-        #         exc_type, exc_obj, exc_tb = sys.exc_info()
-        #         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        #         import pdb; pdb.set_trace()
-        #         print(e)
-        #         print(exc_type, fname, exc_tb.tb_lineno)
-
-        #         return dumps(str(e.description)), code
-        #     except Exception:
-        #         return dumps(str(e)), code
-
+        from app import events
+        
         return app

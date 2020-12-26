@@ -19,7 +19,6 @@ def init_users():
     db.session.commit()
 
 
-@to_json(paginated=True)
 def get_users_list(nbr_results: int, page_nbr: int):
     res = (
         db.session.query(User)

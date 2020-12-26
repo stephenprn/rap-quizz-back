@@ -4,7 +4,8 @@ Skeleton universal project (back-end) including:
 
 ## TODO
 - add in repo
-- imports dans les __init__
+- move to_json in endpoint or add option to not convert to json in service functions
+- tags artists to get similar artist for false responses
 
 ## Heroku commands
 

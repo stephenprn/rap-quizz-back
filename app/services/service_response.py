@@ -12,7 +12,6 @@ repo = ResponseRepository()
 RESPONSES_LIST_SEARCH_TXT_NBR_RESULTS = 5
 
 
-@to_json()
 def get_list_from_search_txt(search_txt: str, type: ResponseType):
     search_txt = normalize_string(search_txt)
     return repo.list_from_search_txt(
@@ -20,7 +19,6 @@ def get_list_from_search_txt(search_txt: str, type: ResponseType):
     )
 
 
-@to_json()
 def add(label: str, type: ResponseType):
     # label_normalized = normalize_string(label)
 
