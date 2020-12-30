@@ -6,6 +6,7 @@ from os import environ
 from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
+from app.utils.utils_json import CustomJSONEncoder
 from app.shared.db import db
 from app.shared.socketio import socketio
 from app.services.service_admin import init_users
@@ -18,6 +19,9 @@ def create_app():
 
     """Construct the core application."""
     app = Flask(__name__)
+
+    app.json_encoder = CustomJSONEncoder
+
     app.config["SQLALCHEMY_DATABASE_URI"] = environ.get("SQLALCHEMY_DATABASE_URI")
     app.config["SECRET_KEY"] = environ.get("SECRET_KEY")
     app.config["JWT_AUTH_URL_RULE"] = environ.get("JWT_AUTH_URL_RULE")

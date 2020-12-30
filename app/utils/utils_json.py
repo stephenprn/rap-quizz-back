@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-
+from flask.json import JSONEncoder
 
 def default_handler(x):
     if isinstance(x, datetime.datetime):
@@ -9,3 +9,13 @@ def default_handler(x):
         return x.name
 
     raise TypeError("Unknown type")
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            return default_handler(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)

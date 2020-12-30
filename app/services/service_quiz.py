@@ -95,7 +95,7 @@ def answer_reponse(
     return convert_to_json(
         {
             "answer_right": answer_right,
-            "next_question": __generate_question_dict(
+            "next_question": generate_question_dict(
                 next_question.question, next_question.responses_false
             )
             if next_question is not None
@@ -114,7 +114,10 @@ def join_quiz(quiz_url: str):
         abort(400, 'Quiz already started')
     elif quiz.status == QuizStatus.FINISHED:
         abort(400, 'Quiz already finished')
-    
+
+    if repo_user_quiz.get_by_quiz_id_user_id(quiz.id, current_identity.id) is not None:
+        abort(409, 'User is already in this quiz')
+
     user_quiz = UserQuiz(
         current_identity.id,
         quiz.id,
@@ -154,16 +157,25 @@ def __generate_questions(
     return questions
 
 
-def __generate_question_dict(
+def generate_question_dict(
     question: Question, false_questions_responses: List[QuestionResponse]
 ):
+    correct_response = next(
+        response for response in question.responses if response.status == QuestionResponseStatus.CORRECT)
     question_dict = convert_to_dict(question)
+
+    for response_dict in question_dict["responses"]:
+        response_dict.pop('status')
+
     question_dict["responses"].extend(
         convert_to_dict(false_questions_responses))
 
     shuffle(question_dict["responses"])
 
-    return question_dict
+    print("CORRECT RESPONSE")
+    print(correct_response)
+
+    return question_dict, correct_response
 
 
 def __generate_false_responses(question: Question):
@@ -176,10 +188,12 @@ def __generate_false_responses(question: Question):
 
 def __generate_unique_url(name: str):
     url_base = normalize_string(name, replace_spaces=URL_SEPARATOR)
-    url = url_base
-    url_sufix = generate_random_string(QUIZ_URL_RANDOM_STR_LENGTH)
 
-    while db.session.query(Quiz.id).filter_by(url=url).scalar() is not None:
+    while True:
+        url_sufix = generate_random_string(QUIZ_URL_RANDOM_STR_LENGTH)
         url = url_base + URL_SEPARATOR + url_sufix
+
+        if db.session.query(Quiz.id).filter_by(url=url).scalar() is None:
+            break
 
     return url
