@@ -19,7 +19,7 @@ LABEL_MIN_LENGTH = 8
 LABEL_MAX_LENGTH = 100
 
 
-def add(label: str, response_uuid: str):
+def add(label: str, response_uuid: str) -> Question:
     check_length(label, "Label", LABEL_MIN_LENGTH, LABEL_MAX_LENGTH)
 
     # label_normalized = normalize_string(label)

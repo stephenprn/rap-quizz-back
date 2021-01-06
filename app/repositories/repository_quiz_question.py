@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, load_only
 
@@ -12,7 +14,7 @@ from app.models import QuizQuestion, QuestionResponse, QuizQuestionResponse
 class QuizQuestionRepository(RepositoryBase):
     model = QuizQuestion
 
-    def get(self, quiz_url: str, question_index: int):
+    def get(self, quiz_url: str, question_index: int) -> QuizQuestion:
         return (
             self.model.query.join(self.model.quiz)
             .join(self.model.question)
@@ -33,7 +35,7 @@ class QuizQuestionRepository(RepositoryBase):
             .first()
         )
 
-    def get_all_by_quiz_uuid(self, quiz_uuid: str):
+    def get_all_by_quiz_uuid(self, quiz_uuid: str) -> List[QuizQuestion]:
         return (
             self.model.query.join(self.model.quiz)
             .join(self.model.question)

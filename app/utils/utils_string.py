@@ -8,7 +8,7 @@ from uuid import uuid4
 RANDOM_CHARS = string.ascii_uppercase + string.ascii_lowercase + string.digits
 
 
-def normalize_string(text: str, replace_spaces: str = " "):
+def normalize_string(text: str, replace_spaces: str = " ") -> str:
     try:
         text = unicode(text, "utf-8")
     except NameError:  # unicode is a default on python 3
@@ -32,7 +32,7 @@ def normalize_string(text: str, replace_spaces: str = " "):
     return replace_spaces.join(sub_texts)
 
 
-def check_length(text: str, name: str, min_length: int, max_length: int = None):
+def check_length(text: str, name: str, min_length: int, max_length: int = None) -> None:
     if text == None:
         abort(400, "{} must be specified".format(name, str(min_length)))
 
@@ -50,11 +50,11 @@ def check_length(text: str, name: str, min_length: int, max_length: int = None):
         )
 
 
-def generate_uuid():
+def generate_uuid() -> str:
     return str(uuid4())
 
 
-def generate_random_string(length: int):
+def generate_random_string(length: int) -> str:
     return ''.join(random.choices(RANDOM_CHARS, k=length))
 
 

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from app.shared.repository import RepositoryBase
 
@@ -14,7 +14,7 @@ class ResponseRepository(RepositoryBase):
         type: ResponseType,
         nbr_results: Optional[int] = None,
         page: Optional[int] = None,
-    ):
+    ) -> List[Response]:
         query = self.model.query.filter(
             self.model.label.ilike(f"%{search_txt}%"), self.model.type == type
         )
@@ -23,10 +23,10 @@ class ResponseRepository(RepositoryBase):
 
         return query.all()
 
-    def get_by_uuid(self, uuid: str):
+    def get_by_uuid(self, uuid: str) -> Response:
         return self.model.query.filter(self.model.uuid == uuid).scalar()
 
-    def get(self, label: str, type: ResponseType):
+    def get(self, label: str, type: ResponseType) -> Response:
         return self.model.query.filter(
             self.model.label == label, self.model.type == type
         ).scalar()

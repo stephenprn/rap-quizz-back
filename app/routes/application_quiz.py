@@ -1,5 +1,5 @@
-from flask import Blueprint, request, Response
-from flask_jwt import jwt_required
+from flask import Blueprint, request, Response, abort
+from flask_jwt_extended import jwt_required
 
 from app.services import service_quiz
 from app.shared.annotations import pagination, to_json
@@ -26,28 +26,23 @@ def get_quizzes_list(nbr_results: int, page_nbr: int):
 
 
 @application_quiz.route("/generate-quiz")
-@jwt_required()
+@jwt_required
 def generate_quiz():
-    return service_quiz.generate_quiz()
+    try:
+        question_duration = int(request.args.get('question_duration'))
+    except ValueError:
+        abort(400, 'question_duration must be an integer')
+
+    try:
+        nbr_questions = int(request.args.get('nbr_questions'))
+    except ValueError:
+        abort(400, 'nbr_questions must be an integer')
+
+    return service_quiz.generate_quiz(question_duration=question_duration, nbr_questions=nbr_questions)
 
 
 @application_quiz.route("/join-quiz/<quiz_url>")
-@jwt_required()
+@jwt_required
+@to_json()
 def join_quiz(quiz_url: str):
     return service_quiz.join_quiz(quiz_url)
-
-
-@application_quiz.route("/answer-response/<quiz_url>", methods=["POST"])
-@jwt_required()
-def answer_reponse(quiz_url: str):
-    try:
-        question_index = int(request.form.get("question_index"))
-    except Exception:
-        abort(400, "Question index invalid")
-
-    question_uuid = request.form.get("question_uuid")
-    response_uuid = request.form.get("response_uuid")
-
-    return service_quiz.answer_reponse(
-        quiz_url, question_index, question_uuid, response_uuid
-    )

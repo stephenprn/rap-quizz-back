@@ -1,17 +1,43 @@
 from flask import Blueprint, request, json
-from flask_jwt import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token, create_refresh_token, jwt_refresh_token_required
 
 from app.shared.db import db
 from app.services import service_auth
 
 application_auth = Blueprint("application_auth", __name__)
 
-# /login endpoint is reserved and managed by flask_jwt
+# /login endpoint is reserved and managed by flask_jwt_extended
 
 
 @application_auth.route("/")
 def hello():
     return "hello auth"
+
+
+@application_auth.route("/login", methods=["POST"])
+def login():
+    email = request.json.get("email")
+    password = request.json.get("password")
+
+    user_dict = service_auth.authenticate(email, password)
+
+    if user_dict == None:
+        abort(400, 'Invalid credentials')
+
+    return json.dumps({
+        'access_token': create_access_token(identity=user_dict),
+        'refresh_token': create_refresh_token(identity=user_dict),
+        'user': user_dict
+    })
+
+
+@application_auth.route('/refresh')
+@jwt_refresh_token_required
+def refresh():
+    user_dict = get_jwt_identity()
+    return json.dumps({
+        'access_token': create_access_token(identity=user_dict)
+    })
 
 
 @application_auth.route("/register", methods=["POST"])
@@ -40,6 +66,6 @@ def check_username():
 
 
 @application_auth.route("/check-logged")
-@jwt_required()
+@jwt_required
 def check_logged():
     return json.dumps(True)

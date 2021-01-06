@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_jwt import JWT
+from flask_jwt_extended import JWTManager
 
 from os import environ
 from werkzeug.exceptions import HTTPException
@@ -10,8 +10,8 @@ from app.utils.utils_json import CustomJSONEncoder
 from app.shared.db import db
 from app.shared.socketio import socketio
 from app.services.service_admin import init_users
-from app.services.service_auth import authenticate, identity
 
+current_app = None
 
 def create_app():
     """Load env parameters"""
@@ -26,6 +26,9 @@ def create_app():
     app.config["SECRET_KEY"] = environ.get("SECRET_KEY")
     app.config["JWT_AUTH_URL_RULE"] = environ.get("JWT_AUTH_URL_RULE")
     app.config["JWT_AUTH_USERNAME_KEY"] = environ.get("JWT_AUTH_USERNAME_KEY")
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = int(environ.get("JWT_ACCESS_TOKEN_EXPIRES", 1800))
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = int(environ.get("JWT_REFRESH_TOKEN_EXPIRES", 259200))
+
 
     db.init_app(app)
 
@@ -53,10 +56,13 @@ def create_app():
         init_users()
 
         CORS(app)
-        JWT(app, authenticate, identity)
+        JWTManager(app)
         
         socketio.init_app(app, cors_allowed_origins="*")
 
         from app import events
         
+        global current_app
+        current_app = app
+
         return app

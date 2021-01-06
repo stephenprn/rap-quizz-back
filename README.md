@@ -3,15 +3,17 @@ Skeleton universal project (back-end) including:
 - OAuth2 authentication
 
 ## TODO
-- leave room (delete userquiz relation)
 - add in repo
-- move to_json in endpoint or add option to not convert to json in service functions
 - tags artists to get similar artist for false responses
 - custom exceptions
-- return types functions (->)
 - typed dicts
 - logger
 - socket events enums
+- switch from uuid to url everywhere
+- issue join hour quiz
+- timer answer response (can be set when quiz created: no timer or timer limit)
+- timeout connection socket to remove user from room
+- utils request : convert param or abort
 
 ## Heroku commands
 

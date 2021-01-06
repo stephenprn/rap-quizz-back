@@ -7,7 +7,7 @@ from app.shared.model import ModelAssociation
 
 
 class UserQuizStatus(enum.Enum):
-    CREATOR = "CREATOR"
+    ADMIN = "ADMIN"
     PLAYER = "PLAYER"
 
 
@@ -21,6 +21,7 @@ class UserQuiz(ModelAssociation):
     quiz = relationship("Quiz", back_populates="users")
 
     status = db.Column(db.Enum(UserQuizStatus))
+    score = db.Column(db.Integer)
 
     creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
 

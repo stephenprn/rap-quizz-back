@@ -1,4 +1,5 @@
 from flask import abort
+from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.orm import load_only
 from sqlalchemy import or_
 
@@ -15,7 +16,7 @@ PASSWORD_MIN_LENGTH = 6
 PASSWORD_MAX_LENGTH = 20
 
 
-def register(email: str, username: str, password: str):
+def register(email: str, username: str, password: str) -> None:
     check_length(password, "Password", PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)
     check_length(username, "Username", USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH)
 
@@ -41,7 +42,7 @@ def register(email: str, username: str, password: str):
     db.session.commit()
 
 
-def check_username(username: str):
+def check_username(username: str) -> None:
     username_exists = (
         db.session.query(User.id).filter(User.username == username).scalar() is not None
     )
@@ -50,10 +51,10 @@ def check_username(username: str):
         abort(409, "This username is already taken")
 
 
-# flask_jwt functions
+# flask_jwt_extended functions
 
 
-def authenticate(email: str, password: str):
+def authenticate(email: str, password: str) -> dict:
     password_hashed = hash_password(password)
     email = email.lower()
 
@@ -70,12 +71,17 @@ def authenticate(email: str, password: str):
     if not check_password(password, user.salt, user.password):
         return None
 
-    return user
+    return {
+        'username': user.username,
+        'uuid': user.uuid
+    }
 
+def get_current_identity() -> User:
+    identity_dict = get_jwt_identity()
 
-def identity(payload):
-    user_id = payload["identity"]
+    user = db.session.query(User).filter_by(uuid=identity_dict.get('uuid')).first()
 
-    user = db.session.query(User).filter_by(id=user_id).first()
-
+    if user == None:
+        abort(403, 'Invalid token')
+    
     return user

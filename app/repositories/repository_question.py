@@ -16,12 +16,12 @@ from app.models import Response
 class QuestionRepository(RepositoryBase):
     model = Question
 
-    def get(self, label: str):
+    def get(self, label: str) -> Question:
         return self.model.query.filter(self.model.label == label).scalar()
 
     def get_random_for_quiz(
         self, nbr: int, exclude_questions_ids: Optional[List[id]] = None
-    ):
+    ) -> List[Question]:
         query = self.model.query.join(self.model.responses).options(
             joinedload(self.model.responses)
             .load_only()
@@ -33,7 +33,7 @@ class QuestionRepository(RepositoryBase):
 
         return query.order_by(func.random()).limit(nbr).all()
 
-    def check_answer(self, question_uuid: str, response_uuid: str):
+    def check_answer(self, question_uuid: str, response_uuid: str) -> bool:
         return db.session.query(
             self.model.query.join(self.model.responses, QuestionResponse.response)
             .filter(

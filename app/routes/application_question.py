@@ -1,5 +1,5 @@
 from flask import Blueprint, request, Response
-from flask_jwt import jwt_required
+from flask_jwt_extended import jwt_required
 
 from app.services import service_question
 from app.shared.annotations import pagination, to_json
@@ -16,7 +16,7 @@ def hello():
 
 
 @application_question.route("/add", methods=["POST"])
-@jwt_required()
+@jwt_required
 @to_json()
 def add_question():
     label = request.form.get("label")

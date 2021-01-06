@@ -1,3 +1,4 @@
+from typing import Optional, Callable
 from flask import request, abort, json
 from functools import wraps
 
@@ -6,7 +7,7 @@ from app.utils.utils_json import default_handler
 # if nbr_results_default is specified, we try to get nbr_results
 
 
-def pagination(nbr_results_default=None):
+def pagination(nbr_results_default=None) -> Callable:
     def decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
@@ -42,7 +43,7 @@ def pagination(nbr_results_default=None):
 # convert objects or lists to json
 
 
-def to_json(paginated=False):
+def to_json(paginated=False) -> Callable:
     def decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
@@ -56,7 +57,7 @@ def to_json(paginated=False):
     return decorator
 
 
-def convert_to_dict(res, paginated=False):
+def convert_to_dict(res, paginated=False) -> Optional[dict]:
     if paginated:
         data = res["data"]
     else:
@@ -75,7 +76,7 @@ def convert_to_dict(res, paginated=False):
     return None
 
 
-def convert_to_json(res_dict, paginated=False):
+def convert_to_json(res_dict, paginated=False) -> Optional[str]:
     if res_dict != None:
         return json.dumps(res_dict, default=default_handler, sort_keys=True)
 

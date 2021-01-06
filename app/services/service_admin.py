@@ -5,7 +5,7 @@ from app.shared.db import db
 from app.shared.annotations import to_json
 
 
-def init_users():
+def init_users() -> None:
     admin_exists = (
         db.session.query(User.id).filter_by(username="admin").scalar() is not None
     )
@@ -19,7 +19,7 @@ def init_users():
     db.session.commit()
 
 
-def get_users_list(nbr_results: int, page_nbr: int):
+def get_users_list(nbr_results: int, page_nbr: int) -> dict:
     res = (
         db.session.query(User)
         .options(load_only("uuid", "email", "username", "creation_date"))

@@ -25,9 +25,10 @@ def init_test_questions():
     for artist, question in [
         ("Orelsan", "Qui a écrit perdu d'avance ?"),
         ("Nekfeu", "Quel rappeur se prénomme Ken Samaras ?"),
-        ("Vald", "Quel reppeur est l'auteur des albums NQNT ?"),
+        ("Vald", "Quel rappeur est l'auteur des albums NQNT ?"),
         ("Laylow", "Qui a sorti Trinity en 2020 ?"),
         ("Damso", 'Qui est l\'auteur du single "Bruxelles Vie" ?'),
+        ("Népal", 'Qui est l\'auteur du chef d\'oeuvre "Adios Bahamas" ?'),
     ]:
         try:
             response = service_response.add(artist, ResponseType.ARTIST)

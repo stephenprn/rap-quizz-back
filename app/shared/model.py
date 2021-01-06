@@ -26,7 +26,7 @@ class ModelCommon(db.Model):
         attrs = " ".join([f"{attr.key}={ga(attr.key)}" for attr in state.attrs])
         return f"<{self.__tablename__} {attrs}>"
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         state = inspect(self)
 
         # load of non-relationship properties

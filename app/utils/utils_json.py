@@ -2,7 +2,7 @@ import datetime
 from enum import Enum
 from flask.json import JSONEncoder
 
-def default_handler(x):
+def default_handler(x) -> str:
     if isinstance(x, datetime.datetime):
         return x.isoformat()
     elif isinstance(x, Enum):

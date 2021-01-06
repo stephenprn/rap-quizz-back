@@ -19,6 +19,7 @@ class Quiz(ModelBase):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text)
     nbr_questions = db.Column(db.Integer, nullable=False)
+    question_duration = db.Column(db.Integer, nullable=False)
 
     users = relationship("UserQuiz", back_populates="quiz")
     questions = relationship("QuizQuestion", back_populates="quiz")
@@ -27,10 +28,12 @@ class Quiz(ModelBase):
     hidden = db.Column(db.Boolean, default=False)
 
     def __init__(
-        self, name: str, url: str, nbr_questions: int, description: str = None
+        self, name: str, url: str, nbr_questions: int, question_duration: int, description: str = None
     ):
         self.name = name
         self.url = url
         self.nbr_questions = nbr_questions
+        self.question_duration = question_duration
         self.description = description
+        
         self.status = QuizStatus.WAITING

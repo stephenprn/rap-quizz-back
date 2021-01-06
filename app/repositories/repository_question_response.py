@@ -16,7 +16,7 @@ class QuestionResponseRepository(RepositoryBase):
         response_type: ResponseType,
         nbr_results: int,
         exclude_responses_ids: Optional[List[int]],
-    ):
+    ) -> List[QuestionResponse]:
         return (
             self.model.query.join(self.model.response)
             .options(
