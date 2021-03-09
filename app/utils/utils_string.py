@@ -38,15 +38,13 @@ def check_length(text: str, name: str, min_length: int, max_length: int = None) 
 
     if len(text) < min_length:
         abort(
-            400, "{} must be at least {} characters long".format(
-                name, str(min_length))
+            400, "{} must be at least {} characters long".format(name, str(min_length))
         )
 
     if max_length != None and len(text) > max_length:
         abort(
             400,
-            "{} must be no more than {} characters long".format(
-                name, str(min_length)),
+            "{} must be no more than {} characters long".format(name, str(min_length)),
         )
 
 
@@ -55,7 +53,7 @@ def generate_uuid() -> str:
 
 
 def generate_random_string(length: int) -> str:
-    return ''.join(random.choices(RANDOM_CHARS, k=length))
+    return "".join(random.choices(RANDOM_CHARS, k=length))
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ import hashlib
 from base64 import b64encode
 
 
-
 def hash_password(password: str) -> Tuple[str, str]:
     salt = str(b64encode(__generate_random_salt()))
 
@@ -30,6 +29,7 @@ def __hash_pw_salt(password: str, salt: str) -> str:
             )
         )
     )
+
 
 def __generate_random_salt() -> bytes:
     return os.urandom(32)

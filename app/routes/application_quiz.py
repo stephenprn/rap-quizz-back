@@ -29,20 +29,21 @@ def get_quizzes_list(nbr_results: int, page_nbr: int):
 @jwt_required
 def generate_quiz():
     try:
-        question_duration = int(request.args.get('question_duration'))
+        question_duration = int(request.args.get("question_duration"))
     except ValueError:
-        abort(400, 'question_duration must be an integer')
+        abort(400, "question_duration must be an integer")
 
     try:
-        nbr_questions = int(request.args.get('nbr_questions'))
+        nbr_questions = int(request.args.get("nbr_questions"))
     except ValueError:
-        abort(400, 'nbr_questions must be an integer')
+        abort(400, "nbr_questions must be an integer")
 
-    return service_quiz.generate_quiz(question_duration=question_duration, nbr_questions=nbr_questions)
+    return service_quiz.generate_quiz(
+        question_duration=question_duration, nbr_questions=nbr_questions
+    )
 
 
 @application_quiz.route("/join-quiz/<quiz_url>")
 @jwt_required
-@to_json()
 def join_quiz(quiz_url: str):
     return service_quiz.join_quiz(quiz_url)

@@ -10,7 +10,7 @@ from app.models import QuestionResponse, QuestionResponseStatus
 
 from app.utils.utils_string import normalize_string, check_length
 
-repo = QuestionRepository()
+repo_question = QuestionRepository()
 repo_response = ResponseRepository()
 
 RESPONSES_LIST_SEARCH_TXT_NBR_RESULTS = 5
@@ -24,7 +24,7 @@ def add(label: str, response_uuid: str) -> Question:
 
     # label_normalized = normalize_string(label)
 
-    if repo.get(label) != None:
+    if repo_question.get(label) != None:
         abort(409, "This question already exists")
 
     response = repo_response.get_by_uuid(response_uuid)

@@ -1,9 +1,11 @@
 import enum
 
+
 class QuizPlayerAnswerStatus(enum.Enum):
-    RIGHT = 'RIGHT'
-    WRONG = 'WRONG'
-    NONE = 'NONE'
+    RIGHT = "RIGHT"
+    WRONG = "WRONG"
+    NONE = "NONE"
+
 
 class QuizPlayer:
     def __init__(self, uuid: str, username: str, admin: bool = False):

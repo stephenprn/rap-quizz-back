@@ -44,7 +44,8 @@ class QuizRepository(RepositoryBase):
         for user_quiz in quiz.users:
             player = quiz_room.get_player(user_quiz.user.uuid)
             user_quiz.score = player.score
-
+            user_quiz.user_leaved_quiz_status = QuizStatus.FINISHED
+            
         db.session.commit()
 
     def set_status_by_uuid(self, uuid: str, status: QuizStatus) -> None:

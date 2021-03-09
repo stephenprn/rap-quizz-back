@@ -5,6 +5,7 @@ from app.shared.db import db
 from app.shared.model import ModelBase
 from app.utils import utils_date, utils_hash
 
+
 class QuizStatus(enum.Enum):
     WAITING = "WAITING"
     ONGOING = "ONGOING"
@@ -28,12 +29,17 @@ class Quiz(ModelBase):
     hidden = db.Column(db.Boolean, default=False)
 
     def __init__(
-        self, name: str, url: str, nbr_questions: int, question_duration: int, description: str = None
+        self,
+        name: str,
+        url: str,
+        nbr_questions: int,
+        question_duration: int,
+        description: str = None,
     ):
         self.name = name
         self.url = url
         self.nbr_questions = nbr_questions
         self.question_duration = question_duration
         self.description = description
-        
+
         self.status = QuizStatus.WAITING

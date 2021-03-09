@@ -2,6 +2,7 @@ import datetime
 from enum import Enum
 from flask.json import JSONEncoder
 
+
 def default_handler(x) -> str:
     if isinstance(x, datetime.datetime):
         return x.isoformat()
@@ -9,6 +10,7 @@ def default_handler(x) -> str:
         return x.name
 
     raise TypeError("Unknown type")
+
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -19,3 +21,11 @@ class CustomJSONEncoder(JSONEncoder):
         else:
             return list(iterable)
         return JSONEncoder.default(self, obj)
+
+def get_nested_field(data: dict, path: str):
+    res = data
+
+    for key in path.split('.'):
+        res = res[key]
+
+    return res

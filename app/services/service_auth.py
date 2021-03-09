@@ -54,13 +54,12 @@ def check_username(username: str) -> None:
 # flask_jwt_extended functions
 
 
-def authenticate(email: str, password: str) -> dict:
+def authenticate(email: str, password: str, with_id: bool = True) -> dict:
     password_hashed = hash_password(password)
     email = email.lower()
 
     user = (
         db.session.query(User)
-        .options(load_only("password", "salt"))
         .filter_by(email=email)
         .first()
     )
@@ -71,17 +70,15 @@ def authenticate(email: str, password: str) -> dict:
     if not check_password(password, user.salt, user.password):
         return None
 
-    return {
-        'username': user.username,
-        'uuid': user.uuid
-    }
+    return {"username": user.username, "uuid": user.uuid, "id": user.id }
+
 
 def get_current_identity() -> User:
     identity_dict = get_jwt_identity()
 
-    user = db.session.query(User).filter_by(uuid=identity_dict.get('uuid')).first()
+    user = db.session.query(User).filter_by(uuid=identity_dict.get("uuid")).first()
 
     if user == None:
-        abort(403, 'Invalid token')
-    
+        abort(403, "Invalid token")
+
     return user

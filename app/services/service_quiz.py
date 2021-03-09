@@ -6,7 +6,11 @@ from typing import List, Tuple
 
 import app.models
 
-from app.utils.utils_string import normalize_string, check_length, generate_random_string
+from app.utils.utils_string import (
+    normalize_string,
+    check_length,
+    generate_random_string,
+)
 from app.utils.utils_date import get_current_date_string
 
 from app.repositories import QuestionRepository
@@ -27,8 +31,10 @@ from app.models import (
     QuestionResponse,
     QuizQuestionResponse,
     QuestionResponseStatus,
-    Quiz, QuizStatus,
-    Question, Response
+    Quiz,
+    QuizStatus,
+    Question,
+    Response,
 )
 
 repo_quiz = QuizRepository()
@@ -46,6 +52,7 @@ QUIZ_QUESTION_DEFAULT_DURATION_SEC = 30
 QUIZ_DEFAULT_NBR_QUESTIONS = 10
 QUIZ_DEFAULT_NBR_ADDITIONAL_RESPONSES = 3
 QUIZ_URL_RANDOM_STR_LENGTH = 6
+QUIZ_MAX_PLAYERS = 10
 
 
 def get_quizzes_list(nbr_results: int, page_nbr: int) -> dict:
@@ -59,7 +66,11 @@ def get_quizzes_list(nbr_results: int, page_nbr: int) -> dict:
     return {"total": res.total, "data": res.items}
 
 
-def generate_quiz(name: str = None, nbr_questions: int = QUIZ_DEFAULT_NBR_QUESTIONS, question_duration: int = QUIZ_QUESTION_DEFAULT_DURATION_SEC) -> str:
+def generate_quiz(
+    name: str = None,
+    nbr_questions: int = QUIZ_DEFAULT_NBR_QUESTIONS,
+    question_duration: int = QUIZ_QUESTION_DEFAULT_DURATION_SEC,
+) -> str:
     if name == None:
         name = get_current_date_string()
 
@@ -87,39 +98,54 @@ def join_quiz(quiz_url: str) -> Quiz:
     quiz = repo_quiz.get_one_by_url(quiz_url, with_users=True)
 
     if quiz == None:
-        abort(404, 'Quiz not found')
+        abort(404, "Quiz not found")
     elif quiz.status == QuizStatus.ONGOING:
-        abort(400, 'Quiz already started')
+        abort(400, "Quiz already started")
     elif quiz.status == QuizStatus.FINISHED:
-        abort(400, 'Quiz already finished')
+        abort(400, "Quiz already finished")
 
     current_identity = service_auth.get_current_identity()
 
-    if repo_user_quiz.get_by_quiz_id_user_id(quiz.id, current_identity.id) is not None:
-        abort(409, 'User is already in this quiz')
+    user_quiz = repo_user_quiz.get_by_quiz_id_user_id(
+        quiz.id, current_identity.id)
 
-    user_quiz = UserQuiz(
-        current_identity.id,
-        quiz.id,
-        UserQuizStatus.PLAYER
-    )
+    if user_quiz is not None and user_quiz.user_leaved_quiz_status is None:
+        abort(409, "User is already in this quiz")
 
-    db.session.add(user_quiz)
-    db.session.commit()
+    if repo_user_quiz.count_participating_by_quiz_id(quiz.id) >= QUIZ_MAX_PLAYERS:
+        abort(409, "Too many players in this quiz")
 
-    return quiz
+    if user_quiz is None:
+        user_quiz = UserQuiz(current_identity.id, quiz.id,
+                             UserQuizStatus.PLAYER)
+
+        db.session.add(user_quiz)
+        db.session.commit()
+    else:
+        user_quiz.user_leaved_quiz_status = None
+
+    # return all players except me
+    quiz_dict = convert_to_dict(quiz)
+    quiz_dict["users"] = [quiz_user for quiz_user in quiz_dict["users"] if quiz_user["user"]["uuid"] != current_identity.uuid]
+
+    return convert_to_json(quiz_dict)
 
 
-def leave_quiz(quiz_uuid: str) -> None:
+def leave_quiz(quiz_uuid: str, quiz_status: QuizStatus) -> None:
     current_identity = service_auth.get_current_identity()
     user_quiz = repo_user_quiz.get_by_quiz_uuid_user_id(
         quiz_uuid, current_identity.id)
 
-    if user_quiz == None:
-        abort(404, 'User not in this quiz or quiz does not exists')
+    if user_quiz is None:
+        abort(404, "User not in this quiz or quiz does not exists")
         return
 
-    db.session.delete(user_quiz)
+    if user_quiz.user_leaved_quiz_status is not None:
+        abort(409, "User already leaved this")
+        return
+
+    user_quiz.status = UserQuizStatus.PLAYER
+    user_quiz.user_leaved_quiz_status = quiz_status
     db.session.commit()
 
 
@@ -154,11 +180,14 @@ def generate_question_dict(
     question: Question, false_questions_responses: List[QuestionResponse]
 ) -> Tuple[dict, Response]:
     correct_response = next(
-        response for response in question.responses if response.status == QuestionResponseStatus.CORRECT)
+        response
+        for response in question.responses
+        if response.status == QuestionResponseStatus.CORRECT
+    )
     question_dict = convert_to_dict(question)
 
     for response_dict in question_dict["responses"]:
-        response_dict.pop('status')
+        response_dict.pop("status")
 
     question_dict["responses"].extend(
         convert_to_dict(false_questions_responses))

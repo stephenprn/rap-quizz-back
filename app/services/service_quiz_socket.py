@@ -7,13 +7,19 @@ from flask_jwt_extended import get_jwt_identity
 
 from app.shared.socketio import socketio
 from app.shared.annotations import convert_to_json
-from app.repositories import QuizQuestionRepository, QuestionRepository, QuizRepository, UserQuizRepository
+from app.repositories import (
+    QuizQuestionRepository,
+    QuestionRepository,
+    QuizRepository,
+    UserQuizRepository,
+)
 from app.utils import utils_date
 from app.services import service_quiz
 from app.classes import QuizRoom, QuizPlayer
 from app.models import QuizStatus, UserQuizStatus
 
-QUIZ_ROOM_PREFIX = 'quiz-'
+QUIZ_ROOM_PREFIX = "quiz-"
+START_COUNTDOWN_SEC = 3
 
 repo_quiz = QuizRepository()
 repo_quiz_question = QuizQuestionRepository()
@@ -29,20 +35,18 @@ def join_quiz(quiz_uuid: str) -> None:
         return
 
     user, admin = __join_room(quiz_uuid, __get_user())
-    __emit_event(room_name, 'user_joined', {
-        'user': user,
-        'admin': admin
-    })
+    __emit_event(room_name, "user_joined", {"user": user, "admin": admin})
 
 
 def leave_quiz(quiz_uuid: str) -> None:
     room_name = __get_room_name(quiz_uuid)
+    quiz_room = quizzes[room_name]
     user = __get_user()
 
     __leave_room(quiz_uuid, user)
-    __emit_event(room_name, 'user_leaved', user)
+    __emit_event(room_name, "user_leaved", user)
 
-    service_quiz.leave_quiz(quiz_uuid)
+    service_quiz.leave_quiz(quiz_uuid, quiz_room.status)
 
 
 def start_quiz(quiz_uuid: str) -> None:
@@ -50,19 +54,18 @@ def start_quiz(quiz_uuid: str) -> None:
     quiz_room = quizzes[room_name]
     user = __get_user()
 
-    if not quiz_room.is_admin(user['uuid']):
+    if not quiz_room.is_admin(user["uuid"]):
         return
 
     quiz_questions = repo_quiz_question.get_all_by_quiz_uuid(quiz_uuid)
     quiz_room.add_questions(quiz_questions)
 
-    __emit_event(room_name, 'started',
-                 quizzes[room_name].get_question())
+    __emit_event(room_name, "started", quizzes[room_name].get_question())
 
     quiz_room.set_status(QuizStatus.ONGOING)
     repo_quiz.set_status_by_uuid(quiz_uuid, QuizStatus.ONGOING)
-    __schedule_timer_next_question(quiz_uuid, quiz_room.question_duration)
-
+    __schedule_timer_next_question(
+        quiz_uuid, question_duration=quiz_room.question_duration, first_schedule=True)
 
 
 def answer_response(quiz_uuid: str, question_uuid: str, response_uuid: str) -> None:
@@ -70,10 +73,13 @@ def answer_response(quiz_uuid: str, question_uuid: str, response_uuid: str) -> N
     user = __get_user()
 
     answer_correct = quizzes[room_name].player_answer(
-        user['uuid'], question_uuid, response_uuid)
+        user["uuid"], question_uuid, response_uuid
+    )
 
-    __emit_event(room_name, 'user_answered', {
-                 'user': user, 'answer_correct': answer_correct})
+    __emit_event(
+        room_name, "user_answered", {
+            "user": user, "answer_correct": answer_correct}
+    )
 
     if quizzes[room_name].all_players_answered():
         quizzes[room_name].cancel_question_scheduler()
@@ -87,8 +93,14 @@ def leave_all_quizzes() -> None:
         if __is_room_quiz(room_name):
             current_identity = get_jwt_identity()
             leave_room(room_name)
-            __emit_event(room_name, 'user_leaved', {'username': current_identity['username'],
-                                                    'uuid': current_identity['uuid']})
+            __emit_event(
+                room_name,
+                "user_leaved",
+                {
+                    "username": current_identity["username"],
+                    "uuid": current_identity["uuid"],
+                },
+            )
 
 
 def close_quiz(quiz_uuid: str) -> None:
@@ -102,13 +114,13 @@ def __join_room(quiz_uuid: str, user: dict) -> Tuple[dict, bool]:
 
     if room_name not in quizzes:
         quiz = repo_quiz.get_one_by_uuid(quiz_uuid)
-        quizzes[room_name] = QuizRoom(quiz, user['uuid'])
+        quizzes[room_name] = QuizRoom(quiz, user["uuid"])
 
         admin = True
     else:
         admin = False
 
-    player = QuizPlayer(user['uuid'], user['username'], admin)
+    player = QuizPlayer(user["uuid"], user["username"], admin)
 
     quizzes[room_name].add_player(player)
 
@@ -124,19 +136,21 @@ def __leave_room(quiz_uuid: str, user: dict) -> None:
         return
 
     quiz_room = quizzes[room_name]
+    quiz_room.remove_player(user["uuid"])
 
     # if nobody in the room, remove room
-    if len(quiz_room.remove_player(user['uuid'])) == 0:
+    if len(quiz_room.players) == 0:
         quizzes.pop(room_name)
     # else set a new admin if needed
     else:
         new_admin = quiz_room.set_admin_if_not_exists()
 
         if new_admin != None:
-            __emit_event(room_name, 'admin_set', {
-                'uuid': new_admin.uuid,
-                'username': new_admin.username
-            })
+            __emit_event(
+                room_name,
+                "admin_set",
+                {"uuid": new_admin.uuid, "username": new_admin.username},
+            )
             repo_user_quiz.set_status(
                 quiz_uuid, new_admin.uuid, UserQuizStatus.ADMIN)
 
@@ -144,19 +158,20 @@ def __leave_room(quiz_uuid: str, user: dict) -> None:
 
 
 def __emit_event(room_name: str, event_name: str, event_body: dict = None) -> None:
-    emit(event_name, {
-        'timestamp': utils_date.get_current_datetime_string(),
-        'body': event_body
-    }, room=room_name)
+    emit(
+        event_name,
+        {"timestamp": utils_date.get_current_datetime_string(), "body": event_body},
+        room=room_name,
+    )
 
 
 def __get_room_name(quiz_uuid: str) -> str:
-    return f'{QUIZ_ROOM_PREFIX}{quiz_uuid}'
+    return f"{QUIZ_ROOM_PREFIX}{quiz_uuid}"
 
 
 def __get_user() -> dict:
     current_identity = get_jwt_identity()
-    return {'username': current_identity["username"], 'uuid': current_identity['uuid']}
+    return {"username": current_identity["username"], "uuid": current_identity["uuid"]}
 
 
 def __is_room_quiz(room_name: str) -> bool:
@@ -173,21 +188,26 @@ def __next_question(quiz_uuid: str) -> None:
     question = quiz_room.get_question()
 
     if question == None:
-        __emit_event(room_name, 'finished')
+        __emit_event(room_name, "finished")
 
         quiz_room.set_status(QuizStatus.FINISHED)
-
         repo_quiz.finish_one(quiz_uuid, quiz_room)
         return
 
-    __emit_event(room_name, 'question', question)
+    __emit_event(room_name, "question", question)
     __schedule_timer_next_question(quiz_uuid, quiz_room.question_duration)
 
 
 # WARNING: This has to be run at the end of the call because blocking
-def __schedule_timer_next_question(quiz_uuid: str, question_duration: int):
+def __schedule_timer_next_question(quiz_uuid: str, question_duration: int = None, first_schedule: bool = False):
+    if question_duration == 0:
+        return
+
     room_name = __get_room_name(quiz_uuid)
     scheduler = sched.scheduler()
+
+    if first_schedule:
+        question_duration += START_COUNTDOWN_SEC
 
     event = scheduler.enter(question_duration, 1,
                             __next_question, (quiz_uuid,))

@@ -13,8 +13,7 @@ def init_test_users():
 
     for username in ["test", "test1", "test2"]:
         try:
-            service_auth.register(username + "@test.com",
-                                  username, PASSWORD_TEST)
+            service_auth.register(username + "@test.com", username, PASSWORD_TEST)
         except exceptions.Conflict:
             pass
 
@@ -28,7 +27,7 @@ def init_test_questions():
         ("Vald", "Quel rappeur est l'auteur des albums NQNT ?"),
         ("Laylow", "Qui a sorti Trinity en 2020 ?"),
         ("Damso", 'Qui est l\'auteur du single "Bruxelles Vie" ?'),
-        ("Népal", 'Qui est l\'auteur du chef d\'oeuvre "Adios Bahamas" ?'),
+        ("Népal", "Qui est l'auteur du chef d'oeuvre \"Adios Bahamas\" ?"),
     ]:
         try:
             response = service_response.add(artist, ResponseType.ARTIST)

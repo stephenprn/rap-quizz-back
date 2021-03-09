@@ -11,6 +11,7 @@ class ResponseType(enum.Enum):
     ALBUM = "ALBUM"
     DATE = "DATE"
     OTHER = "OTHER"
+    SONG = "SONG"
 
 
 class Response(ModelBase):
@@ -21,6 +22,10 @@ class Response(ModelBase):
 
     questions = relationship("QuestionResponse", back_populates="response")
 
+    __mapper_args__ = {
+        "polymorphic_identity": "response", "polymorphic_on": type
+    }
+    
     def __init__(self, label: str, type: ResponseType):
         self.label = label
         self.type = type

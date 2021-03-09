@@ -1,4 +1,6 @@
 from typing import Optional, List
+
+from sqlalchemy.sql.expression import func
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, load_only
 
@@ -28,6 +30,7 @@ class QuestionResponseRepository(RepositoryBase):
                     Response.id.notin_(exclude_responses_ids),
                 )
             )
+            .order_by(func.random())
             .limit(nbr_results)
             .all()
         )

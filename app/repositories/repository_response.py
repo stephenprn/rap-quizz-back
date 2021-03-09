@@ -19,7 +19,7 @@ class ResponseRepository(RepositoryBase):
             self.model.label.ilike(f"%{search_txt}%"), self.model.type == type
         )
 
-        query = self._paginate(query, nbr_results=nbr_results, page=page)
+        query = self._paginate(query, nbr_results=nbr_results, page_nbr=page)
 
         return query.all()
 

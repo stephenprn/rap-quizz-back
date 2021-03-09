@@ -31,3 +31,4 @@ toml==0.10.1
 urllib3==1.25.9
 Werkzeug==1.0.1
 zipp==3.1.0
+scrapy==2.4.1

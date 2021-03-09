@@ -5,3 +5,4 @@ env/*
 *.pyc
 ./.vscode
 sandbox/*
+.DS_Store

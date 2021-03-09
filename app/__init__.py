@@ -13,6 +13,7 @@ from app.services.service_admin import init_users
 
 current_app = None
 
+
 def create_app():
     """Load env parameters"""
     load_dotenv()
@@ -26,15 +27,19 @@ def create_app():
     app.config["SECRET_KEY"] = environ.get("SECRET_KEY")
     app.config["JWT_AUTH_URL_RULE"] = environ.get("JWT_AUTH_URL_RULE")
     app.config["JWT_AUTH_USERNAME_KEY"] = environ.get("JWT_AUTH_USERNAME_KEY")
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = int(environ.get("JWT_ACCESS_TOKEN_EXPIRES", 1800))
-    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = int(environ.get("JWT_REFRESH_TOKEN_EXPIRES", 259200))
-
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = int(
+        environ.get("JWT_ACCESS_TOKEN_EXPIRES", 1800)
+    )
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = int(
+        environ.get("JWT_REFRESH_TOKEN_EXPIRES", 259200)
+    )
+    app.config["SQLALCHEMY_ECHO"] = (environ.get("SQLALCHEMY_ECHO") == "true")
 
     db.init_app(app)
 
     @app.before_first_request
     def before_first_request():
-        if app.env == 'development':
+        if app.env == "development":
             from app.setup_dev import init_test_users, init_test_questions
 
             init_test_users()
@@ -46,22 +51,24 @@ def create_app():
         from app.routes.application_quiz import application_quiz
         from app.routes.application_response import application_response
         from app.routes.application_question import application_question
+        from app.routes.application_profile import application_profile
 
         app.register_blueprint(application_auth, url_prefix="/auth")
         app.register_blueprint(application_quiz, url_prefix="/quiz")
         app.register_blueprint(application_response, url_prefix="/response")
         app.register_blueprint(application_question, url_prefix="/question")
+        app.register_blueprint(application_profile, url_prefix="/profile")
 
         db.create_all()  # Create sql tables for our data models
         init_users()
 
         CORS(app)
         JWTManager(app)
-        
+
         socketio.init_app(app, cors_allowed_origins="*")
 
         from app import events
-        
+
         global current_app
         current_app = app
 
