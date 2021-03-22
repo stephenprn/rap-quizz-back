@@ -1,6 +1,6 @@
-from apis.rapgenius.base_crawler import BaseCrawler
+from app.crawlers.base_crawler import BaseCrawler
 
 
 class AlbumCrawler(BaseCrawler):
     def __init__(self):
-        super('albums')
+        super().__init__(['albums'])

@@ -1,4 +1,6 @@
 import json
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import relationship
 
 from app.shared.db import db
 from app.models import Response, ResponseType
@@ -8,6 +10,12 @@ class Artist(Response):
     __tablename__ = "artist"
     __mapper_args__ = { "polymorphic_identity": ResponseType.ARTIST }
 
+    id = db.Column(db.Integer, db.ForeignKey(
+        "response.id",
+        onupdate="cascade",
+        ondelete="cascade"
+    ), primary_key=True)
+
     name = db.Column(db.String(128), nullable=True)
     alternate_names = db.Column(db.JSON, nullable=True)
     description = db.Column(db.Text, nullable=True)
@@ -16,16 +24,36 @@ class Artist(Response):
     instagram_name = db.Column(db.String(128), nullable=True)
     twitter_name = db.Column(db.String(128), nullable=True)
 
-    genius_id = db.Column(db.Integer, nullable=True)
-    genius_url = db.Column(db.String(128), nullable=True)
     genius_followers_count = db.Column(db.Integer, nullable=True)
-    genius_header_img_url = db.Column(db.String(128), nullable=True)
     genius_profile_img_url = db.Column(db.String(128), nullable=True)
     genius_iq = db.Column(db.Integer, nullable=True)
+
+    songs = relationship(
+        "Song", back_populates="artist", foreign_keys="Song.artist_id"
+    )
+
+    @declared_attr
+    def genius_id(cls):
+        return Response.__table__.c.get('genius_id', db.Column(db.Integer, nullable=True))
+
+    
+    @declared_attr
+    def genius_url(cls):
+        return Response.__table__.c.get('genius_url', db.Column(db.String(128), nullable=True))
+
+
+    @declared_attr
+    def genius_header_img_url(cls):
+        return Response.__table__.c.get('genius_header_img_url', db.Column(db.String(128), nullable=True))
+
+    def __init__(self, label: str):
+        super().__init__(label, ResponseType.ARTIST)
+        self.name = label
      
+
     @staticmethod
     def from_dict(data: dict):
-        res = Artist(data.get('name'), ResponseType.ARTIST)
+        res = Artist(data.get('name'))
 
         res.name = data.get('name')
         res.alternate_names = json.dumps(data.get('alternate_names'))

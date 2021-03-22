@@ -25,7 +25,10 @@ class CustomJSONEncoder(JSONEncoder):
 def get_nested_field(data: dict, path: str):
     res = data
 
-    for key in path.split('.'):
-        res = res[key]
+    try:
+        for key in path.split('.'):
+            res = res[key]
+    except KeyError:
+        return None
 
     return res

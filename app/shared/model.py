@@ -31,12 +31,13 @@ class ModelCommon(db.Model):
 
         # load of non-relationship properties
         # add property to dict only if column is loaded (can be excluded with load_only)
-
         res = {
             c.name: getattr(self, c.name)
-            for c in self.__table__.columns
+            for c in self.__mapper__.columns
             if not c.primary_key and c.name not in state.unloaded
         }
+
+        # if self.__class__.__bases__[0].__table__.columns:
 
         # load of relationship propeties
         for rel in state.mapper.relationships:
