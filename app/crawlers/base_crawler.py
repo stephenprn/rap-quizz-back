@@ -12,28 +12,34 @@ class BaseCrawler(ABC):
         self.resources = resources
         self.multiple = multiple
         self.nbr_retries = nbr_retries
-    
+
     def get(self, ids_: List[int], text_format: str = 'plain'):
-        res_dict = self.get_dict(ids_, text_format)
+        res_dict = self._get_dict(ids_, text_format)
+        res_dict = utils_json.get_nested_field(
+            res_dict, self.base_path)
 
         if not self.multiple:
             return self.model.from_dict(res_dict)
         else:
             return [self.model.from_dict(r) for r in res_dict]
 
-    def _get_dict(self, ids_: List[int], text_format: str = 'plain') -> Optional[dict]:
+    def _get_dict(self, ids_: List[int], text_format: str = 'plain', additional_params: dict = None) -> Optional[dict]:
         try_nbr = 0
 
         while try_nbr < self.nbr_retries:
-            r = requests.get(self._build_url(ids_), params={
+            params = {
                 'text_format': text_format
-            }, headers={
+            }
+
+            if additional_params != None:
+                params = {**params, **additional_params}
+
+            r = requests.get(self._build_url(ids_), params=params, headers={
                 'Authorization': f'Bearer {os.environ.get("RAPGENIUS_BEARER_TOKEN")}'
             })
 
             if r.status_code == 200:
-                return utils_json.get_nested_field(
-                    r.json(), self.base_path)
+                return r.json()
 
             try_nbr += 1
 
@@ -48,10 +54,10 @@ class BaseCrawler(ABC):
 
         for i, res in enumerate(self.resources):
             url += res + '/'
-            
+
             if i < len(ids_):
                 url += str(ids_[i]) + '/'
-                
+
         return url[:-1]
 
 

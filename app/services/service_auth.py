@@ -1,13 +1,15 @@
+from typing import List
+
 from flask import abort
-from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.orm import load_only
 from sqlalchemy import or_
-
-from app.models import User
+from flask_jwt_extended import (
+    get_jwt_identity,
+)
+import app.models
 from app.shared.db import db
 from app.utils.utils_hash import check_password, hash_password
 from app.utils.utils_string import check_length
-from app.shared.annotations import to_json
 
 USERNAME_MIN_LENGTH = 4
 USERNAME_MAX_LENGTH = 100
@@ -23,20 +25,20 @@ def register(email: str, username: str, password: str) -> None:
     email = email.lower()
 
     email_exists = (
-        db.session.query(User.id).filter(User.email == email).scalar() is not None
+        db.session.query(app.models.User.id).filter(app.models.User.email == email).scalar() is not None
     )
 
     if email_exists:
         abort(409, "This email is already registered")
 
     username_exists = (
-        db.session.query(User.id).filter(User.username == username).scalar() is not None
+        db.session.query(app.models.User.id).filter(app.models.User.username == username).scalar() is not None
     )
 
     if username_exists:
         abort(409, "This username is already taken")
 
-    user = User(username, email, password)
+    user = app.models.User(username, email, password)
 
     db.session.add(user)
     db.session.commit()
@@ -44,12 +46,20 @@ def register(email: str, username: str, password: str) -> None:
 
 def check_username(username: str) -> None:
     username_exists = (
-        db.session.query(User.id).filter(User.username == username).scalar() is not None
+        db.session.query(app.models.User.id).filter(app.models.User.username == username).scalar() is not None
     )
 
     if username_exists:
         abort(409, "This username is already taken")
 
+
+def has_role(role: app.models.UserRole = None):
+    user = get_current_identity()
+
+    if user.role == role:
+        return True
+    
+    return False
 
 # flask_jwt_extended functions
 
@@ -59,7 +69,7 @@ def authenticate(email: str, password: str, with_id: bool = True) -> dict:
     email = email.lower()
 
     user = (
-        db.session.query(User)
+        db.session.query(app.models.User)
         .filter_by(email=email)
         .first()
     )
@@ -73,10 +83,10 @@ def authenticate(email: str, password: str, with_id: bool = True) -> dict:
     return {"username": user.username, "uuid": user.uuid, "id": user.id }
 
 
-def get_current_identity() -> User:
+def get_current_identity() -> app.models.User:
     identity_dict = get_jwt_identity()
 
-    user = db.session.query(User).filter_by(uuid=identity_dict.get("uuid")).first()
+    user = db.session.query(app.models.User).filter_by(uuid=identity_dict.get("uuid")).first()
 
     if user == None:
         abort(403, "Invalid token")

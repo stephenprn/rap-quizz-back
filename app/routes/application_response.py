@@ -30,6 +30,6 @@ def get_list_from_search_txt():
 @to_json()
 def add_response():
     label = request.form.get("label")
-    type = request.form.get("type")
+    type_ = request.form.get("type")
 
-    return service_response.add(label, type)
+    return service_response.add_simple(label, type_)

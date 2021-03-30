@@ -1,4 +1,4 @@
-from flask import Blueprint, request, json, Response
+from flask import Blueprint, request, json, Response, abort
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity,
@@ -7,6 +7,7 @@ from flask_jwt_extended import (
     jwt_refresh_token_required,
 )
 
+from app.models import UserRole
 from app.shared.db import db
 from app.services import service_auth
 
@@ -78,3 +79,12 @@ def check_username():
 @jwt_required
 def check_logged():
     return Response(status=200)
+
+
+@application_auth.route("/has-role/<role>")
+@jwt_required
+def has_role(role: str):
+    if service_auth.has_role(UserRole[role]):
+        return json.dumps(True)
+
+    abort(403, f'User does not have following role: {role}')

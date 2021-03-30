@@ -1,8 +1,10 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, List
 from flask import request, abort, json
 from functools import wraps
 
+from app.models import UserRole
 from app.utils.utils_json import default_handler
+from app.services import service_auth
 
 # if nbr_results_default is specified, we try to get nbr_results
 
@@ -51,6 +53,20 @@ def to_json(paginated=False) -> Callable:
             res_dict = convert_to_dict(res, paginated)
             return convert_to_json(res_dict)
 
+        wrapper.__name__ = function.__name__
+        return wrapper
+
+    return decorator
+
+
+def has_role(roles: List[UserRole]):
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            if service_auth.get_current_identity().role not in roles:
+                abort(403, 'You are not allowed to access this resource')
+
+            return function(*args, **kwargs)
         wrapper.__name__ = function.__name__
         return wrapper
 

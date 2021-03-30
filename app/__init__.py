@@ -23,7 +23,8 @@ def create_app():
 
     app.json_encoder = CustomJSONEncoder
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = environ.get("SQLALCHEMY_DATABASE_URI")
+    app.config["SQLALCHEMY_DATABASE_URI"] = environ.get(
+        "SQLALCHEMY_DATABASE_URI")
     app.config["SECRET_KEY"] = environ.get("SECRET_KEY")
     app.config["JWT_AUTH_URL_RULE"] = environ.get("JWT_AUTH_URL_RULE")
     app.config["JWT_AUTH_USERNAME_KEY"] = environ.get("JWT_AUTH_USERNAME_KEY")
@@ -41,6 +42,7 @@ def create_app():
     def before_first_request():
         if app.env == "development":
             from app.setup_dev import init_test_users, init_test_questions
+            from app.services import service_crawler
 
             init_test_users()
             init_test_questions()

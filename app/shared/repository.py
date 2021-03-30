@@ -14,7 +14,7 @@ class RepositoryBase:
     def get(self, id_, *args, **kwargs) -> ModelCommon:
         return self.model.query.filter(id == id_).one()
 
-    def list(self, *args, **kwargs) -> List[ModelCommon]:
+    def list_(self, *args, **kwargs) -> List[ModelCommon]:
         query = self.model.query
 
         query = self._paginate(
