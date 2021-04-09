@@ -64,21 +64,24 @@ def start_quiz(quiz_uuid: str) -> None:
 
     quiz_room.set_status(QuizStatus.ONGOING)
     repo_quiz.set_status_by_uuid(quiz_uuid, QuizStatus.ONGOING)
+    quiz_room.set_last_question_date(datetime.now() + timedelta(seconds=START_COUNTDOWN_SEC))
     __schedule_timer_next_question(
         quiz_uuid, question_duration=quiz_room.question_duration, first_schedule=True)
 
 
 def answer_response(quiz_uuid: str, question_uuid: str, response_uuid: str) -> None:
     room_name = __get_room_name(quiz_uuid)
+    quiz_room = quizzes[room_name]
     user = __get_user()
 
-    answer_correct = quizzes[room_name].player_answer(
+    answer_correct, score, score_total = quizzes[room_name].player_answer(
         user["uuid"], question_uuid, response_uuid
     )
 
     __emit_event(
         room_name, "user_answered", {
-            "user": user, "answer_correct": answer_correct}
+            "user": user, "answer_correct": answer_correct, "score": score, "score_total": score_total
+        }
     )
 
     if quizzes[room_name].all_players_answered():
@@ -194,6 +197,7 @@ def __next_question(quiz_uuid: str) -> None:
         repo_quiz.finish_one(quiz_uuid, quiz_room)
         return
 
+    quiz_room.set_last_question_date()
     __emit_event(room_name, "question", question)
     __schedule_timer_next_question(quiz_uuid, quiz_room.question_duration)
 

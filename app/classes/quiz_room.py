@@ -1,8 +1,12 @@
 from typing import List, Optional
+from datetime import datetime
+from math import floor
 
 from . import QuizPlayer, QuizPlayerAnswerStatus
 from app.models import QuizQuestion, QuizStatus, Quiz
 from app.services import service_quiz
+
+MAX_POINTS_PER_QUESTION = 10
 
 
 class QuizRoom:
@@ -22,6 +26,7 @@ class QuizRoom:
 
         self.question_scheduler = None
         self.question_scheduler_event = None
+        self.last_question_date = None
 
     def __repr__(self):
         return f"<QuizRoom name={self.name} admin_uuid={self.admin_uuid} status={self.status}>"
@@ -57,6 +62,9 @@ class QuizRoom:
 
         return self.questions
 
+    def set_last_question_date(self, date: datetime = None):
+        self.last_question_date = date or datetime.now()
+
     def get_question(self, index: int = None) -> Optional[dict]:
         if index == None:
             index = self.index
@@ -68,7 +76,7 @@ class QuizRoom:
 
     def player_answer(
         self, player_uuid: str, question_uuid: str, response_uuid: str
-    ) -> bool:
+    ) -> (bool, int, int):
         player = self.get_player(player_uuid)
 
         if player == None:
@@ -82,11 +90,13 @@ class QuizRoom:
 
         if answer_correct:
             player.answer_status = QuizPlayerAnswerStatus.RIGHT
-            player.score += 1
+            score = self.__get_score()
+            player.score += score
         else:
             player.answer_status = QuizPlayerAnswerStatus.WRONG
+            score = 0
 
-        return answer_correct
+        return answer_correct, score, player.score
 
     def all_players_answered(self) -> bool:
         return all(
@@ -132,6 +142,17 @@ class QuizRoom:
     def get_player(self, player_uuid: str) -> Optional[QuizPlayer]:
         return next(
             (player for player in self.players if player.uuid == player_uuid), None
+        )
+
+    def __get_score(self):
+        if self.question_duration == 0:
+            return MAX_POINTS_PER_QUESTION
+
+        import pdb; pdb.set_trace()
+        return int(
+            floor(
+                ((datetime.now() - self.last_question_date).total_seconds() / self.question_duration) * MAX_POINTS_PER_QUESTION
+            )
         )
 
     def __check_right_response(self, question_uuid: str, response_uuid: str) -> bool:

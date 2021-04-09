@@ -55,6 +55,15 @@ def generate_uuid() -> str:
 def generate_random_string(length: int) -> str:
     return "".join(random.choices(RANDOM_CHARS, k=length))
 
+def get_array_from_delimited_list(delimited_string_list: str, name: str = 'list', separator: str = ','):
+    if delimited_string_list == None or delimited_string_list == '':
+        return []
+
+    try:
+        return delimited_string_list.split(separator)
+    except Exception as e:
+        abort(400, '{} must be a delimited list'.format(name))
+
 
 if __name__ == "__main__":
     print(normalize_string("Héùlàïo iM'ka +=$*-éàççàu(çà!§-", "-"))

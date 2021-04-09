@@ -36,11 +36,13 @@ class RepositoryBase:
         query: Query,
         nbr_results: Optional[int] = None,
         page_nbr: Optional[int] = None,
-        with_nbr_results: bool = False
+        with_nbr_results: bool = False,
+        *args, 
+        **kwargs
     ) -> Query:
         if with_nbr_results:
             res = query.paginate(
-                page=page_nbr,
+                page=page_nbr + 1,
                 per_page=nbr_results,
                 error_out=False
             )

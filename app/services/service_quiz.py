@@ -17,7 +17,7 @@ from app.repositories import QuestionRepository
 from app.repositories import QuestionResponseRepository
 from app.repositories import QuizRepository
 from app.repositories import UserQuizRepository
-from app.repositories import QuizQuestionRepository
+from app.repositories import QuizQuestionRepository, ResponseRepository
 
 from app.services import service_quiz_socket, service_auth
 
@@ -42,6 +42,7 @@ repo_question = QuestionRepository()
 repo_question_response = QuestionResponseRepository()
 repo_user_quiz = UserQuizRepository()
 repo_quiz_question = QuizQuestionRepository()
+repo_response = ResponseRepository()
 
 URL_SEPARATOR = "-"
 
@@ -50,7 +51,7 @@ NAME_MAX_LENGTH = 100
 
 QUIZ_QUESTION_DEFAULT_DURATION_SEC = 30
 QUIZ_DEFAULT_NBR_QUESTIONS = 10
-QUIZ_DEFAULT_NBR_ADDITIONAL_RESPONSES = 3
+QUIZ_DEFAULT_NBR_RESPONSES = 4
 QUIZ_URL_RANDOM_STR_LENGTH = 6
 QUIZ_MAX_PLAYERS = 10
 
@@ -157,15 +158,19 @@ def __generate_questions(
     )
 
     for index, question in enumerate(questions):
-        false_questions_responses = __generate_false_responses(question)
+        false_responses = []
+
+        if len(question.responses) < QUIZ_DEFAULT_NBR_RESPONSES:
+            false_responses = __generate_false_responses(question)
+
         quiz_question = QuizQuestion(quiz.id, question.id, index)
 
         db.session.add(quiz_question)
         db.session.commit()
 
-        for question_response in false_questions_responses:
+        for response in false_responses:
             quiz_question_response = QuizQuestionResponse(
-                quiz_question.id, question_response.response_id
+                quiz_question.id, response.id
             )
 
             db.session.add(quiz_question_response)
@@ -197,11 +202,13 @@ def generate_question_dict(
     return question_dict, correct_response
 
 
-def __generate_false_responses(question: Question) -> QuestionResponse:
-    return repo_question_response.get_random_for_quiz(
-        question.type,
-        QUIZ_DEFAULT_NBR_ADDITIONAL_RESPONSES,
-        [question.responses[0].response.id],
+def __generate_false_responses(question: Question) -> Response:
+    return repo_response.list_(
+        filter_id_not_in=[qr.response.id for qr in question.responses],
+        filter_type_in=[question.type],
+        order_random=True,
+        nbr_results=QUIZ_DEFAULT_NBR_RESPONSES - len(question.responses),
+        page_nbr=0, 
     )
 
 

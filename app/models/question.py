@@ -9,6 +9,7 @@ from app.utils import utils_date, utils_hash
 
 class QuestionSubType(enum.Enum):
     HIT = "HIT"
+    UNKNOWN = "UNKNOWN"
 
 
 class Question(ModelBase):

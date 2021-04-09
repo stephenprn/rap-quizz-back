@@ -21,18 +21,18 @@ def generate_question_hits(artist: Artist):
     songs = repo_song.get_top_by_artist_id(artist.id)
 
     for song in songs:
-        if repo_question.get(type_=ResponseType.SONG, sub_type=QuestionSubType.HIT, true_response_id=song.id) is not None:
+        if repo_question.get(type_=ResponseType.ARTIST, sub_type=QuestionSubType.HIT, true_response_id=song.id) is not None:
             continue
 
         question = Question(f'Quel est l\'auteur du titre "{song.title}" ?')
-        question.type = ResponseType.SONG
+        question.type = ResponseType.ARTIST
         question.sub_type = QuestionSubType.HIT
 
         db.session.add(question)
         db.session.commit()
 
         question_response = QuestionResponse(
-            question.id, song.id, QuestionResponseStatus.CORRECT
+            question.id, artist.id, QuestionResponseStatus.CORRECT
         )
 
         db.session.add(question_response)
