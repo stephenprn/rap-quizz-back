@@ -148,7 +148,6 @@ class QuizRoom:
         if self.question_duration == 0:
             return MAX_POINTS_PER_QUESTION
 
-        import pdb; pdb.set_trace()
         return int(
             floor(
                 ((datetime.now() - self.last_question_date).total_seconds() / self.question_duration) * MAX_POINTS_PER_QUESTION
