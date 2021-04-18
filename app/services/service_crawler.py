@@ -1,16 +1,19 @@
 from werkzeug import exceptions
 
-from app.shared.db import db
 from app.services import service_response
 from app.models import Artist
 from app.repositories import ArtistRepository
 
-from app.crawlers.rapgenius import AlbumCrawler, ArtistCrawler, ArtistSongsCrawler, SongCrawler
+from app.crawlers.rapgenius import (
+    ArtistCrawler,
+    ArtistSongsCrawler,
+)
 
 repo_artist = ArtistRepository()
 
+
 def crawl_artist_full(id_: int) -> Artist:
-    if not repo_artist.get_by_genius_id(id_):
+    if not repo_artist.get(filter_genius_id_in=[id_]):
         artist = ArtistCrawler().get([id_])
 
     try:
@@ -29,5 +32,5 @@ def crawl_artist_full(id_: int) -> Artist:
     return artist
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     crawl_artist_full(19217)

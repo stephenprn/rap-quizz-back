@@ -1,7 +1,6 @@
-from typing import Optional, List
+from typing import Optional
 
 from app.shared.db import db
-from app.shared.model import ModelCommon
 
 from sqlalchemy.orm.query import Query
 
@@ -11,45 +10,57 @@ class RepositoryBase:
 
     model = None
 
-    def get(self, id_, *args, **kwargs) -> ModelCommon:
-        return self.model.query.filter(id == id_).one()
-
-    def list_(self, *args, **kwargs) -> List[ModelCommon]:
+    def list_(self, *args, **kwargs):
         query = self.model.query
 
-        query = self._paginate(
-            query, nbr_results=kwargs.get("nbr_results"), page_nbr=kwargs.get("page")
-        )
+        query = self._filter_query(query, *args, **kwargs)
+        query = self._load_only(query, *args, **kwargs)
+        query = self._sort_query(query, *args, **kwargs)
 
-        return query.all()
+        return self._execute(query, *args, **kwargs)
 
     def count(self, *args, **kwargs) -> int:
-        return self.model.query.count()
+        query = self.model.query
+
+        query = self._filter_query(query, *args, **kwargs)
+        query = self._load_only(query, *args, **kwargs)
+        query = self._sort_query(query, *args, **kwargs)
+
+        return query.count()
+
+    def get(self, *args, **kwargs):
+        results = self.list_(*args, **kwargs)
+
+        return results[0] if results else None
 
     def add(self, *args, **kwargs) -> None:
         elt = self.model(*args, **kwargs)
         db.session.add(elt)
         db.session.commit()
 
-    def _paginate(
+    def _filter_query(self, query, *args, **kwargs):
+        return query
+
+    def _load_only(self, query, *args, **kwargs):
+        return query
+
+    def _sort_query(self, query, *args, **kwargs):
+        return query
+
+    def _execute(
         self,
         query: Query,
         nbr_results: Optional[int] = None,
         page_nbr: Optional[int] = None,
         with_nbr_results: bool = False,
-        *args, 
+        *args,
         **kwargs
     ) -> Query:
         if with_nbr_results:
             res = query.paginate(
-                page=page_nbr + 1,
-                per_page=nbr_results,
-                error_out=False
+                page=page_nbr + 1, per_page=nbr_results, error_out=False
             )
-            return {
-                "total": res.total,
-                "data": res.items
-            }
+            return {"total": res.total, "data": res.items}
 
         if nbr_results is not None:
             query = query.limit(nbr_results)
@@ -57,4 +68,4 @@ class RepositoryBase:
         if page_nbr is not None:
             query = query.offset(page_nbr * nbr_results)
 
-        return query
+        return query.all()

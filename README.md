@@ -1,19 +1,5 @@
-# Skeleton-back
-Skeleton universal project (back-end) including:
-- OAuth2 authentication
-
-## TODO
-- add in repo
-- tags artists to get similar artist for false responses
-- custom exceptions
-- typed dicts
-- logger
-- socket events enums
-- switch from uuid to url everywhere
-- issue join hour quiz
-- timer answer response (can be set when quiz created: no timer or timer limit)
-- timeout connection socket to remove user from room
-- utils request : convert param or abort
+# Rap quiz back
+Backend of rap quiz, can be found [here](http://www.rapquiz.net/)
 
 ## Heroku commands
 
@@ -24,6 +10,7 @@ $ git add .
 $ git commit -am "make it better"
 $ git push heroku master
 ```
+
 ### Cancel current build
 ```
 heroku builds:cancel
@@ -49,6 +36,11 @@ source venv/bin/activate
 - Set dev environment variables
 ```
 . ./env_variables.sh
+```
+- Clean and format project
+```
+black app
+autoflake --remove-all-unused-imports --ignore-init-module-imports --remove-unused-variables -i -r app
 ```
 
 ## Project structure

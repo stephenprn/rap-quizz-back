@@ -1,4 +1,4 @@
-from flask import Blueprint, request, Response
+from flask import Blueprint
 from flask_jwt_extended import jwt_required
 
 from app.services import service_profile

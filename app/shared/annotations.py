@@ -18,7 +18,7 @@ def pagination(nbr_results_default=None) -> Callable:
 
                 if page_nbr == None or page_nbr == "":
                     page_nbr = 0
-            except Exception as e:
+            except Exception:
                 abort(400, "Page number is required: page_nbr")
 
             if nbr_results_default != None:
@@ -27,7 +27,7 @@ def pagination(nbr_results_default=None) -> Callable:
 
                     if nbr_results == None or nbr_results == "":
                         nbr_results = nbr_results_default
-                except Exception as e:
+                except Exception:
                     nbr_results = nbr_results_default
 
                 kwargs["nbr_results"] = nbr_results
@@ -64,9 +64,10 @@ def has_role(roles: List[UserRole]):
         @wraps(function)
         def wrapper(*args, **kwargs):
             if service_auth.get_current_identity().role not in roles:
-                abort(403, 'You are not allowed to access this resource')
+                abort(403, "You are not allowed to access this resource")
 
             return function(*args, **kwargs)
+
         wrapper.__name__ = function.__name__
         return wrapper
 

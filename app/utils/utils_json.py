@@ -22,11 +22,12 @@ class CustomJSONEncoder(JSONEncoder):
             return list(iterable)
         return JSONEncoder.default(self, obj)
 
+
 def get_nested_field(data: dict, path: str):
     res = data
 
     try:
-        for key in path.split('.'):
+        for key in path.split("."):
             res = res[key]
     except KeyError:
         return None

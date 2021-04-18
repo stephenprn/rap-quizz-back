@@ -85,8 +85,7 @@ class QuizRoom:
         if player.answer_status != QuizPlayerAnswerStatus.NONE:
             raise TypeError("Player already answered")
 
-        answer_correct = self.__check_right_response(
-            question_uuid, response_uuid)
+        answer_correct = self.__check_right_response(question_uuid, response_uuid)
 
         if answer_correct:
             player.answer_status = QuizPlayerAnswerStatus.RIGHT
@@ -145,12 +144,19 @@ class QuizRoom:
         )
 
     def __get_score(self):
+        # for now, we only add 1 point / question
+        return 1
+
         if self.question_duration == 0:
             return MAX_POINTS_PER_QUESTION
 
         return int(
             floor(
-                ((datetime.now() - self.last_question_date).total_seconds() / self.question_duration) * MAX_POINTS_PER_QUESTION
+                (
+                    (datetime.now() - self.last_question_date).total_seconds()
+                    / self.question_duration
+                )
+                * MAX_POINTS_PER_QUESTION
             )
         )
 

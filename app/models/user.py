@@ -1,9 +1,8 @@
-from sqlalchemy import inspect
 from sqlalchemy.orm import relationship
 import enum
 
 from app.shared.db import db
-from app.utils import utils_date, utils_hash
+from app.utils import utils_hash
 from app.shared.model import ModelBase
 
 
@@ -18,6 +17,7 @@ class User(ModelBase):
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     role = db.Column(db.Enum(UserRole), nullable=False)
+    color = db.Column(db.String(128), nullable=False)
 
     password = db.Column(db.String(128), nullable=False)
     salt = db.Column(db.String(128), nullable=False)
@@ -30,11 +30,17 @@ class User(ModelBase):
     questions = relationship("UserQuestion", back_populates="user")
 
     def __init__(
-        self, username: str, email: str, password: str, role: UserRole = UserRole.USER
+        self,
+        username: str,
+        email: str,
+        password: str,
+        role: UserRole = UserRole.USER,
+        color: str = "#ffffff",
     ):
         self.username = username
         self.email = email
         self.role = role
+        self.color = color
 
         pw_salt = utils_hash.hash_password(password)
 

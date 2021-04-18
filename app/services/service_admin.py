@@ -2,7 +2,6 @@ from sqlalchemy.orm import load_only
 
 from app.models import User, UserRole
 from app.shared.db import db
-from app.shared.annotations import to_json
 
 
 def init_users() -> None:
@@ -13,7 +12,9 @@ def init_users() -> None:
     if admin_exists:
         return
 
-    admin = User("admin", "admin@admin.com", "password", UserRole.ADMIN)
+    admin = User(
+        "admin", "admin@admin.com", "password", role=UserRole.ADMIN, color="#000000"
+    )
 
     db.session.add(admin)
     db.session.commit()

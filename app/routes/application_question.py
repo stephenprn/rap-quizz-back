@@ -23,7 +23,9 @@ def hello():
 def add_question():
     label = request.form.get("label")
     true_response_uuid = request.form.get("true_response_uuid")
-    false_responses_uuid = get_array_from_delimited_list(request.form.get("false_responses_uuid"), name='false_responses_uuid')
+    false_responses_uuid = get_array_from_delimited_list(
+        request.form.get("false_responses_uuid"), name="false_responses_uuid"
+    )
 
     return service_question.add(label, true_response_uuid, false_responses_uuid)
 
@@ -45,7 +47,10 @@ def edit(question_uuid: str):
         try:
             hidden = bool(request.args.get("hidden"))
         except ValueError:
-            abort(400, f"hidden must be an boolean, received: {request.args.get('hidden')}")
+            abort(
+                400,
+                f"hidden must be an boolean, received: {request.args.get('hidden')}",
+            )
     else:
         hidden = None
 

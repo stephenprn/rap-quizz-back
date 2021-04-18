@@ -1,10 +1,8 @@
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 import enum
 
 from app.shared.db import db
 from app.shared.model import ModelBase
-from app.utils import utils_date, utils_hash
 
 
 class ResponseType(enum.Enum):
@@ -23,10 +21,8 @@ class Response(ModelBase):
 
     questions = relationship("QuestionResponse", back_populates="response")
 
-    __mapper_args__ = {
-        "polymorphic_identity": "response", "polymorphic_on": type
-    }
-    
+    __mapper_args__ = {"polymorphic_identity": "response", "polymorphic_on": type}
+
     def __init__(self, label: str, type: ResponseType):
         self.label = label
         self.type = type

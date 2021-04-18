@@ -1,7 +1,5 @@
 from typing import Optional, List
 
-from sqlalchemy.sql.expression import func
-from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, load_only
 
 from app.shared.repository import RepositoryBase
@@ -13,24 +11,32 @@ from app.models import QuestionResponse
 class QuestionResponseRepository(RepositoryBase):
     model = QuestionResponse
 
-    def get_random_for_quiz(
-        self,
-        response_type: ResponseType,
-        nbr_results: int,
-        exclude_responses_ids: Optional[List[int]],
-    ) -> List[QuestionResponse]:
-        return (
-            self.model.query.join(self.model.response)
-            .options(
+    def _load_only(
+        self, query, load_only_response_label: Optional[bool] = False, *args, **kwargs
+    ):
+        if load_only_response_label:
+            query = query.join(self.model.response).options(
                 load_only(), joinedload(self.model.response).load_only("label", "uuid")
             )
-            .filter(
-                and_(
-                    Response.type == response_type,
-                    Response.id.notin_(exclude_responses_ids),
-                )
+
+        return query
+
+    def _filter_query(
+        self,
+        query,
+        filter_response_type_in: Optional[List[ResponseType]] = None,
+        filter_response_id_not_in: Optional[List[int]] = None,
+        *args,
+        **kwargs
+    ):
+        if filter_response_type_in is not None:
+            query = query.join(self.model.response).filter(
+                Response.type.in_(filter_response_type_in)
             )
-            .order_by(func.random())
-            .limit(nbr_results)
-            .all()
-        )
+
+        if filter_response_id_not_in is not None:
+            query = query.join(self.model.response).filter(
+                Response.id.notin_(filter_response_id_not_in)
+            )
+
+        return query

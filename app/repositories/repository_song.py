@@ -1,5 +1,5 @@
 from typing import Optional, List
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 
 from app.shared.repository import RepositoryBase
 
@@ -9,14 +9,39 @@ from app.models import Song
 class SongRepository(RepositoryBase):
     model = Song
 
-    def get_top_by_artist_id(self, artist_id: int,
-                             nbr_results: Optional[int] = 5,
-                             page: Optional[int] = 0) -> List[Song]:
-        query = self.model.query.filter(
-            self.model.artist_id == artist_id,
-            self.model.genius_pageviews != None
-        ).order_by(desc(self.model.genius_pageviews))
+    def _filter_query(
+        self,
+        query,
+        filter_artist_id_in: List[int] = None,
+        filter_out_null_genius_pageviews: bool = False,
+        *args,
+        **kwargs
+    ):
+        if filter_artist_id_in is not None:
+            query = query.filter(self.model.artist_id.in_(filter_artist_id_in))
 
-        query = self._paginate(query, nbr_results=nbr_results, page_nbr=page)
+        if filter_out_null_genius_pageviews:
+            query = query.filter(self.model.genius_pageviews != None)
 
-        return query.all()
+        return query
+
+    def _sort_query(
+        self,
+        query,
+        order_random: Optional[bool] = None,
+        order_genius_pageviews: Optional[bool] = None,  # true: asc, false: desc
+        *args,
+        **kwargs
+    ):
+        if order_random:
+            query = query.order_by(func.random())
+
+        if order_genius_pageviews is not None:
+            if order_genius_pageviews:
+                order_func = asc
+            else:
+                order_func = desc
+
+            query = query.order_by(order_func(self.model.genius_pageviews))
+
+        return query

@@ -3,7 +3,6 @@ import enum
 
 from app.shared.db import db
 from app.shared.model import ModelBase
-from app.utils import utils_date, utils_hash
 
 
 class QuizStatus(enum.Enum):

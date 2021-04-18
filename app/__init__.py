@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_alembic import Alembic
 
 from os import environ
-from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
 from app.utils.utils_json import CustomJSONEncoder
@@ -23,8 +23,7 @@ def create_app():
 
     app.json_encoder = CustomJSONEncoder
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = environ.get(
-        "SQLALCHEMY_DATABASE_URI")
+    app.config["SQLALCHEMY_DATABASE_URI"] = environ.get("SQLALCHEMY_DATABASE_URI")
     app.config["SECRET_KEY"] = environ.get("SECRET_KEY")
     app.config["JWT_AUTH_URL_RULE"] = environ.get("JWT_AUTH_URL_RULE")
     app.config["JWT_AUTH_USERNAME_KEY"] = environ.get("JWT_AUTH_USERNAME_KEY")
@@ -34,7 +33,7 @@ def create_app():
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = int(
         environ.get("JWT_REFRESH_TOKEN_EXPIRES", 259200)
     )
-    app.config["SQLALCHEMY_ECHO"] = (environ.get("SQLALCHEMY_ECHO") == "true")
+    app.config["SQLALCHEMY_ECHO"] = environ.get("SQLALCHEMY_ECHO") == "true"
 
     db.init_app(app)
 
@@ -42,7 +41,6 @@ def create_app():
     def before_first_request():
         if app.env == "development":
             from app.setup_dev import init_test_users, init_test_questions
-            from app.services import service_crawler
 
             init_test_users()
             init_test_questions()
@@ -67,14 +65,18 @@ def create_app():
         CORS(app)
         JWTManager(app)
 
+        alembic = Alembic()
+        # alembic.rev_id = lambda: datetime.utcnow().timestamp()
+        alembic.init_app(app)
+
         socketio.init_app(app, cors_allowed_origins="*")
 
-        from app import events
 
         global current_app
         current_app = app
 
         return app
+
 
 app = create_app()
 

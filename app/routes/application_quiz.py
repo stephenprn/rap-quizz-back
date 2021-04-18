@@ -1,4 +1,4 @@
-from flask import Blueprint, request, Response, abort
+from flask import Blueprint, abort, request
 from flask_jwt_extended import jwt_required
 
 from app.services import service_quiz

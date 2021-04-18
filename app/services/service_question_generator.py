@@ -1,7 +1,14 @@
 from typing import List
 
 from app.shared.db import db
-from app.models import Artist, QuestionSubType, ResponseType, Question, QuestionResponse, QuestionResponseStatus
+from app.models import (
+    Artist,
+    QuestionSubType,
+    ResponseType,
+    Question,
+    QuestionResponse,
+    QuestionResponseStatus,
+)
 from app.repositories import SongRepository, QuestionRepository
 
 repo_song = SongRepository()
@@ -18,10 +25,20 @@ def generate_question_artist(artist: Artist, sub_types: List[QuestionSubType] = 
 
 
 def generate_question_hits(artist: Artist):
-    songs = repo_song.get_top_by_artist_id(artist.id)
+    songs = repo_song.list_(
+        filter_artist_id_in=[artist.id],
+        filter_out_null_genius_pageviews=True,
+        order_genius_pageviews=False,
+        nbr_results=5,
+        page_nbr=0,
+    )
 
     for song in songs:
-        if repo_question.get(type_=ResponseType.ARTIST, sub_type=QuestionSubType.HIT, true_response_id=song.id) is not None:
+        if repo_question.get(
+            filter_type_in=[ResponseType.ARTIST],
+            filter_sub_type_in=[QuestionSubType.HIT],
+            filter_true_response_id_in=[song.id],
+        ):
             continue
 
         question = Question(f'Quel est l\'auteur du titre "{song.title}" ?')
@@ -39,6 +56,4 @@ def generate_question_hits(artist: Artist):
         db.session.commit()
 
 
-RESPONSE_SUB_TYPE_MAPPING = {
-    QuestionSubType.HIT: generate_question_hits
-}
+RESPONSE_SUB_TYPE_MAPPING = {QuestionSubType.HIT: generate_question_hits}

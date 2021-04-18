@@ -1,56 +1,106 @@
 from typing import Optional, List
 from sqlalchemy.sql.expression import func
-from sqlalchemy.orm import joinedload, load_only
+from sqlalchemy.orm import joinedload
 
-from sqlalchemy import and_, desc
+from sqlalchemy import and_
 
 from app.shared.db import db
 from app.shared.repository import RepositoryBase
-from app.models import QuestionResponse, QuestionResponseStatus, Question, ResponseType, QuestionSubType, Response
+from app.models import (
+    QuestionResponse,
+    QuestionResponseStatus,
+    Question,
+    ResponseType,
+    QuestionSubType,
+    Response,
+)
+from app.utils.utils_query import FilterLabel
 
 
 class QuestionRepository(RepositoryBase):
     model = Question
 
-    def get(self, label: str = None, uuid: str = None, type_: ResponseType = None, sub_type: QuestionSubType = None, true_response_id: int = None) -> Question:
-        query = self.model.query
+    def _filter_query(
+        self,
+        query,
+        filter_label: Optional[FilterLabel] = None,
+        filter_uuid_in: Optional[List[str]] = None,
+        filter_type_in: Optional[List[ResponseType]] = None,
+        filter_sub_type_in: Optional[List[QuestionSubType]] = None,
+        filter_true_response_id_in: Optional[List[int]] = None,
+        filter_hidden: Optional[bool] = None,
+        filter_question_id_not_in: Optional[List[int]] = None,
+        *args,
+        **kwargs
+    ):
+        if filter_label is not None:
+            if filter_label.ignore_case:
+                query = query.filter(self.model.label.ilike(filter_label.label))
+            else:
+                query = query.filter(self.model.label == filter_label.label)
 
-        if label is not None:
-            query = query.filter(self.model.label == label)
+        if filter_uuid_in is not None:
+            query = query.filter(self.model.uuid.in_(filter_uuid_in))
 
-        if type_ is not None:
-            query = query.filter(self.model.type == type_)
+        if filter_type_in is not None:
+            query = query.filter(self.model.type.in_(filter_type_in))
 
-        if sub_type is not None:
-            query = query.filter(self.model.sub_type == sub_type)
+        if filter_sub_type_in is not None:
+            query = query.filter(self.model.sub_type.in_(filter_sub_type_in))
 
-        if uuid is not None:
-            query = query.filter(self.model.uuid == uuid)
+        if filter_true_response_id_in is not None:
+            query = query.join(self.model.responses).filter(
+                and_(
+                    QuestionResponse.response_id.in_(filter_true_response_id_in),
+                    QuestionResponse.status == QuestionResponseStatus.CORRECT,
+                )
+            )
 
-        if true_response_id is not None:
-            query = query.join(self.model.responses).filter(and_(QuestionResponse.response_id ==
-                                                                 true_response_id, QuestionResponse.status == QuestionResponseStatus.CORRECT,))
+        if filter_hidden is not None:
+            query = query.filter(self.model.hidden == filter_hidden)
 
-        return query.scalar()
+        if filter_question_id_not_in is not None:
+            query = query.filter(self.model.id.notin_(filter_question_id_not_in))
 
-    def get_random_for_quiz(
-        self, nbr: int, exclude_questions_ids: Optional[List[id]] = None
-    ) -> List[Question]:
-        query = self.model.query.filter(self.model.hidden == False).join(self.model.responses).options(
-            joinedload(self.model.responses)
-            .load_only()
-            .options(joinedload(QuestionResponse.response).load_only("label", "uuid"))
-        )
+        return query
 
-        if exclude_questions_ids != None:
-            query = query.filter(self.model.id.notin_(exclude_questions_ids))
+    def _load_only(
+        self,
+        query,
+        load_only_response_label: Optional[bool] = False,
+        load_full_response: Optional[bool] = False,
+        *args,
+        **kwargs
+    ):
+        if load_full_response:
+            query = query.join(self.model.responses).options(
+                joinedload(self.model.responses)
+                .load_only("status")
+                .options(
+                    joinedload(QuestionResponse.response).load_only("label", "uuid")
+                )
+            )
 
-        return query.order_by(func.random()).limit(nbr).all()
+        if load_only_response_label:
+            query = query.join(self.model.responses).options(
+                joinedload(self.model.responses)
+                .load_only()
+                .options(
+                    joinedload(QuestionResponse.response).load_only("label", "uuid")
+                )
+            )
+
+        return query
+
+    def _sort_query(self, query, order_random: Optional[bool] = None, *args, **kwargs):
+        if order_random:
+            query = query.order_by(func.random())
+
+        return query
 
     def check_answer(self, question_uuid: str, response_uuid: str) -> bool:
         return db.session.query(
-            self.model.query.join(self.model.responses,
-                                  QuestionResponse.response)
+            self.model.query.join(self.model.responses, QuestionResponse.response)
             .filter(
                 self.model.uuid == question_uuid,
                 self.model.responses.any(
@@ -62,15 +112,3 @@ class QuestionRepository(RepositoryBase):
             )
             .exists()
         ).scalar()
-
-    def list_(self, nbr_results: int, page_nbr: int, hidden: bool = None):
-        query = self.model.query
-
-        if hidden is not None:
-            query = query.filter(
-                self.model.hidden == hidden
-            )
-        
-        query = query.order_by(desc(self.model.creation_date))
-
-        return self._paginate(query, nbr_results=nbr_results, page_nbr=page_nbr, with_nbr_results=True)

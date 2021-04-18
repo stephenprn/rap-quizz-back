@@ -8,7 +8,6 @@ from flask_jwt_extended import (
 )
 
 from app.models import UserRole
-from app.shared.db import db
 from app.services import service_auth
 
 application_auth = Blueprint("application_auth", __name__)
@@ -35,10 +34,7 @@ def login():
         {
             "access_token": create_access_token(identity=user_dict),
             "refresh_token": create_refresh_token(identity=user_dict),
-            "user": {
-                "username": user_dict["username"],
-                "uuid": user_dict["uuid"]
-            },
+            "user": {"username": user_dict["username"], "uuid": user_dict["uuid"]},
         }
     )
 
@@ -87,4 +83,4 @@ def has_role(role: str):
     if service_auth.has_role(UserRole[role]):
         return json.dumps(True)
 
-    abort(403, f'User does not have following role: {role}')
+    abort(403, f"User does not have following role: {role}")

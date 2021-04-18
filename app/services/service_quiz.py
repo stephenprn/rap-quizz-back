@@ -1,14 +1,12 @@
 from flask import abort
-from sqlalchemy.orm import load_only, joinedload
+from sqlalchemy.orm import load_only
 from sqlalchemy import desc
 from random import shuffle
 from typing import List, Tuple
 
-import app.models
 
 from app.utils.utils_string import (
     normalize_string,
-    check_length,
     generate_random_string,
 )
 from app.utils.utils_date import get_current_date_string
@@ -17,12 +15,12 @@ from app.repositories import QuestionRepository
 from app.repositories import QuestionResponseRepository
 from app.repositories import QuizRepository
 from app.repositories import UserQuizRepository
-from app.repositories import QuizQuestionRepository, ResponseRepository
+from app.repositories import ResponseRepository
 
-from app.services import service_quiz_socket, service_auth
+from app.services import service_auth
 
 from app.shared.db import db
-from app.shared.annotations import to_json, convert_to_dict, convert_to_json
+from app.shared.annotations import convert_to_dict, convert_to_json
 
 from app.models import (
     UserQuiz,
@@ -41,7 +39,6 @@ repo_quiz = QuizRepository()
 repo_question = QuestionRepository()
 repo_question_response = QuestionResponseRepository()
 repo_user_quiz = UserQuizRepository()
-repo_quiz_question = QuizQuestionRepository()
 repo_response = ResponseRepository()
 
 URL_SEPARATOR = "-"
@@ -75,8 +72,7 @@ def generate_quiz(
     if name == None:
         name = get_current_date_string()
 
-    quiz = Quiz(name, __generate_unique_url(name),
-                nbr_questions, question_duration)
+    quiz = Quiz(name, __generate_unique_url(name), nbr_questions, question_duration)
 
     db.session.add(quiz)
     db.session.commit()
@@ -96,7 +92,7 @@ def generate_quiz(
 
 
 def join_quiz(quiz_url: str) -> Quiz:
-    quiz = repo_quiz.get_one_by_url(quiz_url, with_users=True)
+    quiz = repo_quiz.get(filter_url_in=[quiz_url], load_only_users=True)
 
     if quiz == None:
         abort(404, "Quiz not found")
@@ -107,18 +103,25 @@ def join_quiz(quiz_url: str) -> Quiz:
 
     current_identity = service_auth.get_current_identity()
 
-    user_quiz = repo_user_quiz.get_by_quiz_id_user_id(
-        quiz.id, current_identity.id)
+    user_quiz = repo_user_quiz.get(
+        filter_quiz_id_in=[quiz.id],
+        filter_user_id_in=[current_identity.id],
+        load_only_status_username=True,
+    )
 
     if user_quiz is not None and user_quiz.user_leaved_quiz_status is None:
         abort(409, "User is already in this quiz")
 
-    if repo_user_quiz.count_participating_by_quiz_id(quiz.id) >= QUIZ_MAX_PLAYERS:
+    if (
+        repo_user_quiz.count(
+            filter_quiz_id_in=[quiz.id], filter_null_user_leaved_quiz_status=True
+        )
+        >= QUIZ_MAX_PLAYERS
+    ):
         abort(409, "Too many players in this quiz")
 
     if user_quiz is None:
-        user_quiz = UserQuiz(current_identity.id, quiz.id,
-                             UserQuizStatus.PLAYER)
+        user_quiz = UserQuiz(current_identity.id, quiz.id, UserQuizStatus.PLAYER)
 
         db.session.add(user_quiz)
         db.session.commit()
@@ -127,15 +130,20 @@ def join_quiz(quiz_url: str) -> Quiz:
 
     # return all players except me
     quiz_dict = convert_to_dict(quiz)
-    quiz_dict["users"] = [quiz_user for quiz_user in quiz_dict["users"] if quiz_user["user"]["uuid"] != current_identity.uuid]
+    quiz_dict["users"] = [
+        quiz_user
+        for quiz_user in quiz_dict["users"]
+        if quiz_user["user"]["uuid"] != current_identity.uuid
+    ]
 
     return convert_to_json(quiz_dict)
 
 
 def leave_quiz(quiz_uuid: str, quiz_status: QuizStatus) -> None:
     current_identity = service_auth.get_current_identity()
-    user_quiz = repo_user_quiz.get_by_quiz_uuid_user_id(
-        quiz_uuid, current_identity.id)
+    user_quiz = repo_user_quiz.get(
+        filter_quiz_uuid_in=[quiz_uuid], filter_user_id_in=[current_identity.id]
+    )
 
     if user_quiz is None:
         abort(404, "User not in this quiz or quiz does not exists")
@@ -153,8 +161,11 @@ def leave_quiz(quiz_uuid: str, quiz_status: QuizStatus) -> None:
 def __generate_questions(
     quiz: Quiz, nbr_questions: int, exclude_questions_ids: List[id] = None
 ) -> List[Question]:
-    questions = repo_question.get_random_for_quiz(
-        nbr_questions, exclude_questions_ids=exclude_questions_ids
+    questions = repo_question.list_(
+        nbr_results=nbr_questions,
+        order_random=True,
+        load_only_response_label=True,
+        filter_question_id_not_in=exclude_questions_ids,
     )
 
     for index, question in enumerate(questions):
@@ -169,9 +180,7 @@ def __generate_questions(
         db.session.commit()
 
         for response in false_responses:
-            quiz_question_response = QuizQuestionResponse(
-                quiz_question.id, response.id
-            )
+            quiz_question_response = QuizQuestionResponse(quiz_question.id, response.id)
 
             db.session.add(quiz_question_response)
             db.session.commit()
@@ -194,8 +203,7 @@ def generate_question_dict(
     for response_dict in question_dict["responses"]:
         response_dict.pop("status")
 
-    question_dict["responses"].extend(
-        convert_to_dict(false_questions_responses))
+    question_dict["responses"].extend(convert_to_dict(false_questions_responses))
 
     shuffle(question_dict["responses"])
 
@@ -208,7 +216,7 @@ def __generate_false_responses(question: Question) -> Response:
         filter_type_in=[question.type],
         order_random=True,
         nbr_results=QUIZ_DEFAULT_NBR_RESPONSES - len(question.responses),
-        page_nbr=0, 
+        page_nbr=0,
     )
 
 

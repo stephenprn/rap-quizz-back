@@ -1,4 +1,3 @@
-from sqlalchemy import Table
 from sqlalchemy.orm import relationship
 import enum
 
@@ -27,7 +26,13 @@ class UserQuiz(ModelAssociation):
 
     creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    def __init__(self, user_id: int, quiz_id: int, status: UserQuizStatus = None, user_leaved_quiz_status: QuizStatus = None):
+    def __init__(
+        self,
+        user_id: int,
+        quiz_id: int,
+        status: UserQuizStatus = None,
+        user_leaved_quiz_status: QuizStatus = None,
+    ):
         self.user_id = user_id
         self.quiz_id = quiz_id
 
@@ -47,8 +52,7 @@ class UserQuestion(ModelAssociation):
     __tablename__ = "user_question"
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey(
-        "question.id"), primary_key=True)
+    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
 
     user = relationship("User", back_populates="questions")
     question = relationship("Question", back_populates="users")
@@ -61,8 +65,7 @@ class QuizQuestion(ModelAssociation):
     id = db.Column(db.Integer, unique=True)
 
     quiz_id = db.Column(db.Integer, db.ForeignKey("quiz.id"), primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey(
-        "question.id"), primary_key=True)
+    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
 
     quiz = relationship("Quiz", back_populates="questions")
     question = relationship("Question", back_populates="quizzes")
@@ -85,11 +88,9 @@ class QuizQuestionResponse(ModelAssociation):
     quiz_question_id = db.Column(
         db.Integer, db.ForeignKey("quiz_question.id"), primary_key=True
     )
-    response_id = db.Column(db.Integer, db.ForeignKey(
-        "response.id"), primary_key=True)
+    response_id = db.Column(db.Integer, db.ForeignKey("response.id"), primary_key=True)
 
-    quiz_question = relationship(
-        "QuizQuestion", back_populates="responses_false")
+    quiz_question = relationship("QuizQuestion", back_populates="responses_false")
     response = relationship("Response")
 
     def __init__(self, quiz_question_id: int, response_id: int):
@@ -108,10 +109,8 @@ class QuestionResponseStatus(enum.Enum):
 class QuestionResponse(ModelAssociation):
     __tablename__ = "question_response"
 
-    question_id = db.Column(db.Integer, db.ForeignKey(
-        "question.id"), primary_key=True)
-    response_id = db.Column(db.Integer, db.ForeignKey(
-        "response.id"), primary_key=True)
+    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
+    response_id = db.Column(db.Integer, db.ForeignKey("response.id"), primary_key=True)
 
     question = relationship("Question", back_populates="responses")
     response = relationship("Response", back_populates="questions")
