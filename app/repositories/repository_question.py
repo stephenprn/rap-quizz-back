@@ -91,13 +91,7 @@ class QuestionRepository(RepositoryBase):
             )
 
         return query
-
-    def _sort_query(self, query, order_random: Optional[bool] = None, *args, **kwargs):
-        if order_random:
-            query = query.order_by(func.random())
-
-        return query
-
+        
     def check_answer(self, question_uuid: str, response_uuid: str) -> bool:
         return db.session.query(
             self.model.query.join(self.model.responses, QuestionResponse.response)

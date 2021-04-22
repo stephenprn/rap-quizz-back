@@ -68,19 +68,3 @@ class UserQuizRepository(RepositoryBase):
 
         return query
 
-    def _sort_query(
-        self,
-        query,
-        order_creation_date: Optional[bool] = None,  # true: asc, false: desc
-        *args,
-        **kwargs
-    ):
-        if order_creation_date is not None:
-            if order_creation_date:
-                order_func = asc
-            else:
-                order_func = desc
-
-            query = query.order_by(order_func(self.model.creation_date))
-
-        return query

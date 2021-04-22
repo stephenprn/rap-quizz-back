@@ -23,7 +23,8 @@ class Question(ModelBase):
 
     users = relationship("UserQuestion", back_populates="question")
     quizzes = relationship("QuizQuestion", back_populates="question")
-    responses = relationship("QuestionResponse", back_populates="question")
+    responses = relationship("QuestionResponse", back_populates="question",
+                             cascade="save-update, merge, delete, delete-orphan")
 
     author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     author = relationship("User", back_populates="questions_created")

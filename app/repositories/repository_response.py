@@ -44,9 +44,3 @@ class ResponseRepository(RepositoryBase):
             query = query.filter(self.model.uuid.notin_(filter_uuid_not_in))
 
         return query
-
-    def _sort_query(self, query, order_random: Optional[bool] = None, *args, **kwargs):
-        if order_random:
-            query = query.order_by(func.random())
-
-        return query

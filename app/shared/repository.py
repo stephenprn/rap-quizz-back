@@ -45,6 +45,32 @@ class RepositoryBase:
         return query
 
     def _sort_query(self, query, *args, **kwargs):
+        return self._sort_query_common(query)
+
+    # true: asc, false: desc
+    def _sort_query_common(self, query, order_creation_date: Optional[bool] = None, 
+                           order_update_date: Optional[bool] = None,
+                           order_random: Optional[bool] = None,
+                           *args, **kwargs):
+        if order_random:
+            query = query.order_by(func.random())
+
+        if order_creation_date is not None:
+            if order_creation_date:
+                order_func = asc
+            else:
+                order_func = desc
+
+            query = query.order_by(order_func(self.model.creation_date))
+
+        if order_update_date is not None:
+            if order_update_date:
+                order_func = asc
+            else:
+                order_func = desc
+
+            query = query.order_by(order_func(self.model.update_date))
+
         return query
 
     def _execute(

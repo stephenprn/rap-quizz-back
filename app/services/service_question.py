@@ -1,5 +1,5 @@
 from flask import abort
-from typing import List
+from typing import List, Optional
 
 from app.shared.db import db
 
@@ -52,7 +52,8 @@ def add(
     true_response = next(
         (res for res in responses if res.uuid == true_response_uuid), None
     )
-    false_responses = [res for res in responses if res.uuid in false_responses_uuid]
+    false_responses = [
+        res for res in responses if res.uuid in false_responses_uuid]
 
     if true_response == None:
         abort(404, "Right response specified does not exist")
@@ -94,11 +95,30 @@ def list_(nbr_results: int, page_nbr: int, hidden: bool = None):
         filter_hidden=hidden,
         load_full_response=True,
         with_nbr_results=True,
+        order_update_date=False
     )
 
 
-def edit(question_uuid: str, hidden: bool = None, label: str = None):
-    question = repo_question.get(filter_uuid_in=[question_uuid])
+def get(question_uuid: str):
+    question = repo_question.get(
+        filter_uuid_in=[question_uuid],
+        load_full_response=True,
+    )
+
+    if not question:
+        abort(404, 'Question not found')
+
+    return question
+
+
+def edit(question_uuid: str, hidden: bool = None, label: str = None, true_response_uuid: Optional[str] = None, false_responses_uuid: Optional[List[str]] = None):
+    question = repo_question.get(filter_uuid_in=[question_uuid], load_full_response=True,)
+
+    if question is None:
+        abort(404, 'Question not found')
+
+    if label is not None:
+        check_length(label, "Label", LABEL_MIN_LENGTH, LABEL_MAX_LENGTH)
 
     if hidden is not None:
         question.hidden = hidden
@@ -106,5 +126,52 @@ def edit(question_uuid: str, hidden: bool = None, label: str = None):
     if label is not None:
         question.label = label
 
+    if true_response_uuid is not None or false_responses_uuid is not None:
+        question.responses = []
+
+        responses_filter_uuid_in = []
+
+        if true_response_uuid is not None:
+            responses_filter_uuid_in += [true_response_uuid]
+
+        if false_responses_uuid is not None:
+            responses_filter_uuid_in += false_responses_uuid
+    
+        responses = repo_response.list_(
+            filter_uuid_in=[true_response_uuid] + false_responses_uuid
+        )
+
+        if true_response_uuid is not None:
+            true_response = next(
+                (res for res in responses if res.uuid == true_response_uuid), None
+            )
+
+            if true_response == None:
+                abort(404, "Right response specified does not exist")
+            
+        if false_responses_uuid is not None:
+            false_responses = [
+                res for res in responses if res.uuid in false_responses_uuid]
+
+            if len(false_responses) != len(false_responses_uuid):
+                abort(
+                    404,
+                    f"{len(false_responses_uuid) - len(false_responses)} false responses specified were not found",
+                )
+        
+        question_response = QuestionResponse(
+            question.id, true_response.id, QuestionResponseStatus.CORRECT
+        )
+
+        db.session.add(question_response)
+
+        for res in false_responses:
+            question_response = QuestionResponse(
+                question.id, res.id, QuestionResponseStatus.WRONG
+            )
+            db.session.add(question_response)
+
     db.session.add(question)
     db.session.commit()
+
+    return question

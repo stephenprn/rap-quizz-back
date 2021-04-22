@@ -28,13 +28,11 @@ class SongRepository(RepositoryBase):
     def _sort_query(
         self,
         query,
-        order_random: Optional[bool] = None,
         order_genius_pageviews: Optional[bool] = None,  # true: asc, false: desc
         *args,
         **kwargs
     ):
-        if order_random:
-            query = query.order_by(func.random())
+        query = self._sort_query_common(query, *args, **kwargs)
 
         if order_genius_pageviews is not None:
             if order_genius_pageviews:
