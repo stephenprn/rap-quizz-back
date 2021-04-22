@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_alembic import Alembic
+from flask_migrate import Migrate
 
 from os import environ
 from dotenv import load_dotenv
@@ -12,7 +13,7 @@ from app.shared.socketio import socketio
 from app.services.service_admin import init_users
 
 current_app = None
-
+migrate = None
 
 def create_app():
     """Load env parameters"""
@@ -20,6 +21,7 @@ def create_app():
 
     """Construct the core application."""
     app = Flask(__name__)
+    migrate = Migrate(app, db)
 
     app.json_encoder = CustomJSONEncoder
 
