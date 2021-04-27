@@ -9,3 +9,6 @@ server:
 
 scrapalbums:
 	python3 scraping/rapgenius/spiders/albums_spider.py
+
+compose:
+	docker-compose up -d
