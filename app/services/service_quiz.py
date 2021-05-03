@@ -2,7 +2,7 @@ from flask import abort
 from sqlalchemy.orm import load_only
 from sqlalchemy import desc
 from random import shuffle
-from typing import List, Tuple
+from typing import List
 
 
 from app.utils.utils_string import (
@@ -166,12 +166,17 @@ def __generate_questions(
         order_random=True,
         load_only_response_label=True,
         filter_question_id_not_in=exclude_questions_ids,
+        filter_hidden=False,
+        filter_responses_hidden=False,
     )
 
     for index, question in enumerate(questions):
         false_responses = []
 
-        if len(question.responses) < QUIZ_DEFAULT_NBR_RESPONSES:
+        if (
+            not question.type.is_precise
+            and len(question.responses) < QUIZ_DEFAULT_NBR_RESPONSES
+        ):
             false_responses = __generate_false_responses(question)
 
         quiz_question = QuizQuestion(quiz.id, question.id, index)
@@ -192,13 +197,18 @@ def __generate_questions(
 
 def generate_question_dict(
     question: Question, false_questions_responses: List[QuestionResponse]
-) -> Tuple[dict, Response]:
-    correct_response = next(
-        response
-        for response in question.responses
-        if response.status == QuestionResponseStatus.CORRECT
-    )
+) -> dict:
+    if not question.type.is_precise:
+        correct_response = next(
+            response
+            for response in question.responses
+            if response.status == QuestionResponseStatus.CORRECT
+        ).response.uuid
+    else:
+        correct_response = question.response_precise
+
     question_dict = convert_to_dict(question)
+    question_dict.pop("response_precise", None)
 
     for response_dict in question_dict["responses"]:
         response_dict.pop("status")
@@ -207,13 +217,17 @@ def generate_question_dict(
 
     shuffle(question_dict["responses"])
 
-    return question_dict, correct_response
+    return {
+        "question_dict": question_dict,
+        "correct_response": correct_response,
+    }
 
 
 def __generate_false_responses(question: Question) -> Response:
     return repo_response.list_(
         filter_id_not_in=[qr.response.id for qr in question.responses],
         filter_type_in=[question.type],
+        filter_hidden=False,
         order_random=True,
         nbr_results=QUIZ_DEFAULT_NBR_RESPONSES - len(question.responses),
         page_nbr=0,

@@ -1,10 +1,10 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, Response
 from flask_jwt_extended import jwt_required
 
 from app.services import service_response
-from app.shared.annotations import to_json
-from app.models import ResponseType
-from app.utils.utils_string import get_array_from_delimited_list
+from app.shared.annotations import pagination, to_json, has_role
+from app.models import ResponseType, UserRole
+from app.utils.utils_string import get_array_from_delimited_list, to_bool
 
 application_response = Blueprint("application_response", __name__)
 
@@ -40,3 +40,37 @@ def add_response():
     type_ = request.form.get("type")
 
     return service_response.add_simple(label, ResponseType[type_])
+
+
+@application_response.route("/edit/<response_uuid>", methods=["POST"])
+@jwt_required
+@has_role([UserRole.ADMIN])
+def edit(response_uuid: str):
+    if request.form.get("hidden") != None:
+        try:
+            hidden = to_bool(request.form.get("hidden"))
+        except ValueError:
+            abort(
+                400,
+                f"hidden must be an boolean, received: {request.form.get('hidden')}",
+            )
+    else:
+        hidden = None
+
+    if request.form.get("label") != None:
+        label = request.form.get("label")
+    else:
+        label = None
+
+    service_response.edit(response_uuid, hidden=hidden, label=label)
+
+    return Response(status=200)
+
+
+@application_response.route("/list")
+@jwt_required
+@has_role([UserRole.ADMIN])
+@to_json(paginated=True)
+@pagination(20)
+def list_questions(nbr_results: int, page_nbr: int):
+    return service_response.list_(nbr_results, page_nbr)

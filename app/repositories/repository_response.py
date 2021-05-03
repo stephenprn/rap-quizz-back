@@ -1,5 +1,4 @@
 from typing import Optional, List
-from sqlalchemy.sql.expression import func
 
 from app.shared.repository import RepositoryBase
 
@@ -14,6 +13,7 @@ class ResponseRepository(RepositoryBase):
         self,
         query,
         filter_label: Optional[FilterLabel] = None,
+        filter_hidden: Optional[bool] = None,
         filter_type_in: Optional[List[ResponseType]] = None,
         filter_uuid_in: Optional[List[str]] = None,
         filter_search_text: Optional[str] = None,
@@ -42,5 +42,8 @@ class ResponseRepository(RepositoryBase):
 
         if filter_uuid_not_in is not None:
             query = query.filter(self.model.uuid.notin_(filter_uuid_not_in))
+
+        if filter_hidden is not None:
+            query = query.filter(self.model.hidden == filter_hidden)
 
         return query

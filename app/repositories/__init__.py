@@ -6,3 +6,4 @@ from .repository_response import ResponseRepository, FilterLabel
 from .repository_user_quiz import UserQuizRepository
 from .repository_song import SongRepository
 from .repository_artist import ArtistRepository
+from .repository_user import UserRepository

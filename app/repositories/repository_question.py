@@ -1,8 +1,7 @@
 from typing import Optional, List
-from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import joinedload
 
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from app.shared.db import db
 from app.shared.repository import RepositoryBase
@@ -29,6 +28,7 @@ class QuestionRepository(RepositoryBase):
         filter_sub_type_in: Optional[List[QuestionSubType]] = None,
         filter_true_response_id_in: Optional[List[int]] = None,
         filter_hidden: Optional[bool] = None,
+        filter_responses_hidden: Optional[bool] = None,
         filter_question_id_not_in: Optional[List[int]] = None,
         *args,
         **kwargs
@@ -59,6 +59,18 @@ class QuestionRepository(RepositoryBase):
         if filter_hidden is not None:
             query = query.filter(self.model.hidden == filter_hidden)
 
+        if filter_responses_hidden is not None:
+            query = (
+                query.outerjoin(self.model.responses)
+                .outerjoin(QuestionResponse.response)
+                .filter(
+                    or_(
+                        Response.hidden == filter_responses_hidden,
+                        self.model.responses == None,
+                    )
+                )
+            )
+
         if filter_question_id_not_in is not None:
             query = query.filter(self.model.id.notin_(filter_question_id_not_in))
 
@@ -73,7 +85,7 @@ class QuestionRepository(RepositoryBase):
         **kwargs
     ):
         if load_full_response:
-            query = query.join(self.model.responses).options(
+            query = query.outerjoin(self.model.responses).options(
                 joinedload(self.model.responses)
                 .load_only("status")
                 .options(
@@ -82,7 +94,7 @@ class QuestionRepository(RepositoryBase):
             )
 
         if load_only_response_label:
-            query = query.join(self.model.responses).options(
+            query = query.outerjoin(self.model.responses).options(
                 joinedload(self.model.responses)
                 .load_only()
                 .options(
@@ -91,7 +103,7 @@ class QuestionRepository(RepositoryBase):
             )
 
         return query
-        
+
     def check_answer(self, question_uuid: str, response_uuid: str) -> bool:
         return db.session.query(
             self.model.query.join(self.model.responses, QuestionResponse.response)

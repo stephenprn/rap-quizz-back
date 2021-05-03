@@ -48,17 +48,11 @@ class QuizRoom:
 
     def add_questions(self, quiz_questions: List[QuizQuestion]) -> List[dict]:
         for index, quiz_question in enumerate(quiz_questions):
-            question_dict, correct_response = service_quiz.generate_question_dict(
+            question = service_quiz.generate_question_dict(
                 quiz_question.question, quiz_question.responses_false
             )
-            question_dict["index"] = index + 1
-
-            self.questions.append(
-                {
-                    "question_dict": question_dict,
-                    "correct_response": correct_response.response.uuid,
-                }
-            )
+            question["question_dict"]["index"] = index + 1
+            self.questions.append(question)
 
         return self.questions
 
@@ -75,7 +69,11 @@ class QuizRoom:
         return self.questions[index]["question_dict"]
 
     def player_answer(
-        self, player_uuid: str, question_uuid: str, response_uuid: str
+        self,
+        player_uuid: str,
+        question_uuid: str,
+        response_uuid: str = None,
+        response_precise: str = None,
     ) -> (bool, int, int):
         player = self.get_player(player_uuid)
 
@@ -85,7 +83,12 @@ class QuizRoom:
         if player.answer_status != QuizPlayerAnswerStatus.NONE:
             raise TypeError("Player already answered")
 
-        answer_correct = self.__check_right_response(question_uuid, response_uuid)
+        if response_uuid is not None:
+            response = response_uuid
+        elif response_precise is not None:
+            response = response_precise
+
+        answer_correct = self.__check_right_response(question_uuid, response)
 
         if answer_correct:
             player.answer_status = QuizPlayerAnswerStatus.RIGHT
@@ -160,7 +163,7 @@ class QuizRoom:
             )
         )
 
-    def __check_right_response(self, question_uuid: str, response_uuid: str) -> bool:
+    def __check_right_response(self, question_uuid: str, response: str) -> bool:
         question = next(
             q for q in self.questions if q["question_dict"]["uuid"] == question_uuid
         )
@@ -168,4 +171,4 @@ class QuizRoom:
         if question == None:
             raise ValueError("Question not found in this quiz")
 
-        return question["correct_response"] == response_uuid
+        return question["correct_response"] == response

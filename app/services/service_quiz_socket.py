@@ -73,13 +73,21 @@ def start_quiz(quiz_uuid: str) -> None:
     )
 
 
-def answer_response(quiz_uuid: str, question_uuid: str, response_uuid: str) -> None:
+def answer_response(
+    quiz_uuid: str,
+    question_uuid: str,
+    response_uuid: str = None,
+    response_precise: str = None,
+) -> None:
     room_name = __get_room_name(quiz_uuid)
     quizzes[room_name]
     user = __get_user()
 
     answer_correct, score, score_total = quizzes[room_name].player_answer(
-        user["uuid"], question_uuid, response_uuid
+        user["uuid"],
+        question_uuid,
+        response_uuid=response_uuid,
+        response_precise=response_precise,
     )
 
     __emit_event(

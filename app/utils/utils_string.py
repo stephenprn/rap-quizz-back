@@ -6,6 +6,7 @@ import random
 from uuid import uuid4
 
 RANDOM_CHARS = string.ascii_uppercase + string.ascii_lowercase + string.digits
+TRUE_VALUES = ["true", "yes", "1"]
 
 
 def normalize_string(text: str, replace_spaces: str = " ") -> str:
@@ -54,6 +55,10 @@ def generate_uuid() -> str:
 
 def generate_random_string(length: int) -> str:
     return "".join(random.choices(RANDOM_CHARS, k=length))
+
+
+def to_bool(text: str):
+    return text.lower() in TRUE_VALUES
 
 
 def get_array_from_delimited_list(

@@ -28,7 +28,7 @@ class QuizQuestionRepository(RepositoryBase):
         if load_only_response_label:
             query = query.options(
                 joinedload(self.model.question)
-                .load_only("label", "type", "uuid")
+                .load_only("label", "type", "uuid", "picture")
                 .joinedload(Question.responses)
                 .load_only("status")
                 .options(

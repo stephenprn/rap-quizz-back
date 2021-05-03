@@ -1,4 +1,3 @@
-
 from app.shared.db import db
 from app.models import Response, ResponseType
 from app.utils import utils_json

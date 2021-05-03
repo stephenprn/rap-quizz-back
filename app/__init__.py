@@ -27,7 +27,7 @@ def create_app():
     """Load env parameters"""
     load_dotenv()
 
-    environment = Environment[environ.get('ENVIRONMENT')]
+    environment = Environment[environ.get("ENVIRONMENT")]
 
     """Construct the core application."""
     app = Flask(__name__)
@@ -53,12 +53,14 @@ def create_app():
         from app.routes.application_response import application_response
         from app.routes.application_question import application_question
         from app.routes.application_profile import application_profile
+        from app.routes.application_user import application_user
 
         app.register_blueprint(application_auth, url_prefix="/auth")
         app.register_blueprint(application_quiz, url_prefix="/quiz")
         app.register_blueprint(application_response, url_prefix="/response")
         app.register_blueprint(application_question, url_prefix="/question")
         app.register_blueprint(application_profile, url_prefix="/profile")
+        app.register_blueprint(application_user, url_prefix="/user")
 
         db.create_all()  # Create sql tables for our data models
         init_users()
@@ -71,6 +73,8 @@ def create_app():
         alembic.init_app(app)
 
         socketio.init_app(app, cors_allowed_origins="*")
+
+        from app import events
 
         current_app = app
 

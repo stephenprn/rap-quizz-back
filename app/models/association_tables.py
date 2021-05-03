@@ -14,7 +14,7 @@ class UserQuizStatus(enum.Enum):
 class UserQuiz(ModelAssociation):
     __tablename__ = "user_quiz"
 
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey("quiz.id"), primary_key=True)
 
     user = relationship("User", back_populates="quizzes")
@@ -51,7 +51,7 @@ class UserQuestionStatus(enum.Enum):
 class UserQuestion(ModelAssociation):
     __tablename__ = "user_question"
 
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
 
     user = relationship("User", back_populates="questions")

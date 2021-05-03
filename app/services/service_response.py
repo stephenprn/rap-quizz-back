@@ -5,7 +5,7 @@ from app.shared.db import db
 
 from app.repositories import ResponseRepository
 from app.models import Response, ResponseType, Album, Artist, Song
-from app.utils.utils_string import normalize_string
+from app.utils.utils_string import normalize_string, check_length
 from app.utils.utils_query import FilterLabel
 
 repo_response = ResponseRepository()
@@ -44,7 +44,7 @@ def add_simple(label: str, type_: ResponseType) -> Response:
     model = RESPONSE_TYPE_MODEL_MAP.get(type_)
 
     if model == None:
-        abort(400, f"No model associated to type {type_}")
+        abort(400, f"This type is invalid: {type_}")
 
     response = model(label)
 
@@ -63,6 +63,35 @@ def add(response: Response):
         != None
     ):
         abort(409, f"{response.type} {response.label} already exists")
+
+    db.session.add(response)
+    db.session.commit()
+
+    return response
+
+
+def list_(nbr_results: int, page_nbr: int, hidden: bool = None):
+    return repo_response.list_(
+        nbr_results=nbr_results,
+        page_nbr=page_nbr,
+        filter_hidden=hidden,
+        with_nbr_results=True,
+        order_update_date=False,
+    )
+
+
+def edit(response_uuid: str, hidden: bool = None, label: str = None):
+    response = repo_response.get(filter_uuid_in=[response_uuid])
+
+    if response is None:
+        abort(404, "Response not found")
+
+    if label is not None:
+        check_length(label, "Label", 1)
+        response.label = label
+
+    if hidden is not None:
+        response.hidden = hidden
 
     db.session.add(response)
     db.session.commit()

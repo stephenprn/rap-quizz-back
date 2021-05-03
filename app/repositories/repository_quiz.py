@@ -7,7 +7,6 @@ from app.shared.repository import RepositoryBase
 from app.models import Quiz, UserQuiz
 
 
-
 class QuizRepository(RepositoryBase):
     model = Quiz
 

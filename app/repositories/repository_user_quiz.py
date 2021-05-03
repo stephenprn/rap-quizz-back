@@ -1,5 +1,4 @@
 from sqlalchemy.orm import joinedload, load_only
-from sqlalchemy import desc
 from typing import List, Optional
 
 from app.shared.repository import RepositoryBase
@@ -67,4 +66,3 @@ class UserQuizRepository(RepositoryBase):
             )
 
         return query
-

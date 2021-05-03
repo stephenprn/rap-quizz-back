@@ -1,10 +1,10 @@
-from flask import Blueprint, request, Response
+from flask import Blueprint, request, Response, abort
 from flask_jwt_extended import jwt_required
 
 from app.services import service_question
 from app.shared.annotations import pagination, to_json, has_role
-from app.models import UserRole
-from app.utils.utils_string import get_array_from_delimited_list
+from app.models import UserRole, ResponseType
+from app.utils.utils_string import get_array_from_delimited_list, to_bool
 
 application_question = Blueprint("application_question", __name__)
 
@@ -22,12 +22,28 @@ def hello():
 @to_json()
 def add_question():
     label = request.form.get("label")
+
+    if request.form.get("response_type") is not None:
+        try:
+            response_type = ResponseType[request.form.get("response_type")]
+        except Exception:
+            abort(400, f'Invalid response type: {request.form.get("response_type")}')
+    else:
+        response_type = None
+
     true_response_uuid = request.form.get("true_response_uuid")
     false_responses_uuid = get_array_from_delimited_list(
         request.form.get("false_responses_uuid"), name="false_responses_uuid"
     )
+    year = request.form.get("year")
 
-    return service_question.add(label=label, true_response_uuid=true_response_uuid, false_responses_uuid=false_responses_uuid)
+    return service_question.add(
+        label,
+        response_type,
+        true_response_uuid,
+        false_responses_uuid=false_responses_uuid,
+        year=year,
+    )
 
 
 @application_question.route("/list")
@@ -45,7 +61,7 @@ def list_questions(nbr_results: int, page_nbr: int):
 def edit(question_uuid: str):
     if request.form.get("hidden") != None:
         try:
-            hidden = bool(request.form.get("hidden"))
+            hidden = to_bool(request.form.get("hidden"))
         except ValueError:
             abort(
                 400,
@@ -53,6 +69,14 @@ def edit(question_uuid: str):
             )
     else:
         hidden = None
+
+    if request.form.get("response_type") is not None:
+        try:
+            response_type = ResponseType[request.form.get("response_type")]
+        except Exception:
+            abort(400, f'Invalid response type: {request.form.get("response_type")}')
+    else:
+        response_type = None
 
     if request.form.get("label") != None:
         label = request.form.get("label")
@@ -71,8 +95,17 @@ def edit(question_uuid: str):
     else:
         false_responses_uuid = None
 
-    service_question.edit(question_uuid, hidden=hidden, label=label,
-                          true_response_uuid=true_response_uuid, false_responses_uuid=false_responses_uuid)
+    year = request.form.get("year")
+
+    service_question.edit(
+        question_uuid,
+        hidden=hidden,
+        label=label,
+        true_response_uuid=true_response_uuid,
+        false_responses_uuid=false_responses_uuid,
+        response_type=response_type,
+        year=year,
+    )
 
     return Response(status=200)
 

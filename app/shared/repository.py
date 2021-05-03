@@ -1,8 +1,10 @@
 from typing import Optional
 
-from app.shared.db import db
-
+from sqlalchemy.sql.expression import func
 from sqlalchemy.orm.query import Query
+from sqlalchemy import desc, asc
+
+from app.shared.db import db
 
 
 class RepositoryBase:
@@ -45,13 +47,18 @@ class RepositoryBase:
         return query
 
     def _sort_query(self, query, *args, **kwargs):
-        return self._sort_query_common(query)
+        return self._sort_query_common(query, *args, **kwargs)
 
     # true: asc, false: desc
-    def _sort_query_common(self, query, order_creation_date: Optional[bool] = None, 
-                           order_update_date: Optional[bool] = None,
-                           order_random: Optional[bool] = None,
-                           *args, **kwargs):
+    def _sort_query_common(
+        self,
+        query,
+        order_creation_date: Optional[bool] = None,
+        order_update_date: Optional[bool] = None,
+        order_random: Optional[bool] = None,
+        *args,
+        **kwargs
+    ):
         if order_random:
             query = query.order_by(func.random())
 
