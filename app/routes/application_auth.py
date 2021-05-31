@@ -27,23 +27,27 @@ def login():
 
     user_dict = service_auth.authenticate(email, password)
 
-    if user_dict == None:
+    if user_dict is None:
         abort(400, "Invalid credentials")
 
     return json.dumps(
         {
-            "access_token": create_access_token(identity=user_dict),
-            "refresh_token": create_refresh_token(identity=user_dict),
-            "user": {"username": user_dict["username"], "uuid": user_dict["uuid"]},
-        }
-    )
+            "access_token": create_access_token(
+                identity=user_dict),
+            "refresh_token": create_refresh_token(
+                identity=user_dict),
+            "user": {
+                "username": user_dict["username"],
+                "uuid": user_dict["uuid"]},
+        })
 
 
 @application_auth.route("/refresh")
 @jwt_refresh_token_required
 def refresh():
     user_dict = get_jwt_identity()
-    return json.dumps({"access_token": create_access_token(identity=user_dict)})
+    return json.dumps(
+        {"access_token": create_access_token(identity=user_dict)})
 
 
 @application_auth.route("/register", methods=["POST"])

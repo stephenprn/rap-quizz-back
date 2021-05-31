@@ -35,7 +35,9 @@ class QuestionRepository(RepositoryBase):
     ):
         if filter_label is not None:
             if filter_label.ignore_case:
-                query = query.filter(self.model.label.ilike(filter_label.label))
+                query = query.filter(
+                    self.model.label.ilike(
+                        filter_label.label))
             else:
                 query = query.filter(self.model.label == filter_label.label)
 
@@ -49,12 +51,13 @@ class QuestionRepository(RepositoryBase):
             query = query.filter(self.model.sub_type.in_(filter_sub_type_in))
 
         if filter_true_response_id_in is not None:
-            query = query.join(self.model.responses).filter(
+            query = query.join(
+                self.model.responses).filter(
                 and_(
-                    QuestionResponse.response_id.in_(filter_true_response_id_in),
+                    QuestionResponse.response_id.in_(
+                        filter_true_response_id_in),
                     QuestionResponse.status == QuestionResponseStatus.CORRECT,
-                )
-            )
+                ))
 
         if filter_hidden is not None:
             query = query.filter(self.model.hidden == filter_hidden)
@@ -66,13 +69,14 @@ class QuestionRepository(RepositoryBase):
                 .filter(
                     or_(
                         Response.hidden == filter_responses_hidden,
-                        self.model.responses == None,
+                        self.model.responses is None,
                     )
                 )
             )
 
         if filter_question_id_not_in is not None:
-            query = query.filter(self.model.id.notin_(filter_question_id_not_in))
+            query = query.filter(
+                self.model.id.notin_(filter_question_id_not_in))
 
         return query
 
@@ -85,36 +89,36 @@ class QuestionRepository(RepositoryBase):
         **kwargs
     ):
         if load_full_response:
-            query = query.outerjoin(self.model.responses).options(
-                joinedload(self.model.responses)
-                .load_only("status")
-                .options(
-                    joinedload(QuestionResponse.response).load_only("label", "uuid")
-                )
-            )
+            query = query.outerjoin(
+                self.model.responses).options(
+                joinedload(
+                    self.model.responses) .load_only("status") .options(
+                    joinedload(
+                        QuestionResponse.response).load_only(
+                        "label",
+                        "uuid")))
 
         if load_only_response_label:
-            query = query.outerjoin(self.model.responses).options(
-                joinedload(self.model.responses)
-                .load_only()
-                .options(
-                    joinedload(QuestionResponse.response).load_only("label", "uuid")
-                )
-            )
+            query = query.outerjoin(
+                self.model.responses).options(
+                joinedload(
+                    self.model.responses) .load_only() .options(
+                    joinedload(
+                        QuestionResponse.response).load_only(
+                        "label",
+                        "uuid")))
 
         return query
 
     def check_answer(self, question_uuid: str, response_uuid: str) -> bool:
         return db.session.query(
-            self.model.query.join(self.model.responses, QuestionResponse.response)
-            .filter(
+            self.model.query.join(
+                self.model.responses,
+                QuestionResponse.response) .filter(
                 self.model.uuid == question_uuid,
                 self.model.responses.any(
                     and_(
                         Response.uuid == response_uuid,
                         QuestionResponse.status == QuestionResponseStatus.CORRECT,
-                    )
-                ),
-            )
-            .exists()
-        ).scalar()
+                    )),
+            ) .exists()).scalar()

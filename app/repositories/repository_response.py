@@ -24,7 +24,9 @@ class ResponseRepository(RepositoryBase):
     ):
         if filter_label is not None:
             if filter_label.ignore_case:
-                query = query.filter(self.model.label.ilike(filter_label.label))
+                query = query.filter(
+                    self.model.label.ilike(
+                        filter_label.label))
             else:
                 query = query.filter(self.model.label == filter_label.label)
 
@@ -35,7 +37,8 @@ class ResponseRepository(RepositoryBase):
             query = query.filter(self.model.uuid.in_(filter_uuid_in))
 
         if filter_search_text is not None:
-            query = query.filter(self.model.label.ilike(f"%{filter_search_text}%"))
+            query = query.filter(
+                self.model.label.ilike(f"%{filter_search_text}%"))
 
         if filter_id_not_in is not None:
             query = query.filter(self.model.id.notin_(filter_id_not_in))

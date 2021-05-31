@@ -1,4 +1,3 @@
-
 from app.shared.repository import RepositoryBase
 
 from app.models import User

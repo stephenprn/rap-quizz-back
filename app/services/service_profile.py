@@ -9,7 +9,7 @@ from app.models import UserQuiz
 repo_user_quiz = UserQuizRepository()
 
 
-def get_history(nbr_results: int, page_nbr: int) -> List[UserQuiz]:
+def get_history(nbr_results: int, page_nbr: int):
     current_identity = get_jwt_identity()
     return repo_user_quiz.list_(
         filter_user_id_in=[current_identity["id"]],

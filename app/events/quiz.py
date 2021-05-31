@@ -33,10 +33,12 @@ def answer_response(data: dict):
     question_uuid = data.get("question_uuid")
     response_uuid = data.get("response_uuid")
     response_precise = data.get("response_precise")
+    responses_ranked_uuid = data.get("responses_ranked_uuid")
 
     service_quiz_socket.answer_response(
         quiz_uuid,
         question_uuid,
         response_uuid=response_uuid,
         response_precise=response_precise,
+        responses_ranked_uuid=responses_ranked_uuid,
     )

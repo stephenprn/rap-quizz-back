@@ -9,19 +9,34 @@ from app.models import (
     QuestionResponse,
     QuestionResponseStatus,
 )
-from app.repositories import SongRepository, QuestionRepository
+from app.repositories import SongRepository, QuestionRepository, ArtistRepository
 
 repo_song = SongRepository()
 repo_question = QuestionRepository()
+repo_artist = ArtistRepository()
 
 
-def generate_questions_artist(artist: Artist, sub_types: List[QuestionSubType] = None):
+def generate_questions_artist(
+    artist: Artist = None,
+    artist_uuid: str = None,
+    sub_types: List[QuestionSubType] = None,
+) -> int:
+    if artist is None:
+        artist = repo_artist.get(filter_uuid_in=[artist_uuid])
+
+        if artist is None:
+            abort(404, "Artist not found")
+
     if sub_types is None:
         sub_types = QuestionSubType
 
+    nbr_generated = 0
+
     for sub_type in sub_types:
         if RESPONSE_SUB_TYPE_MAPPING.get(sub_type):
-            RESPONSE_SUB_TYPE_MAPPING[sub_type](artist)
+            nbr_generated += RESPONSE_SUB_TYPE_MAPPING[sub_type](artist)
+
+    return nbr_generated
 
 
 def generate_question_hits(artist: Artist):
@@ -33,6 +48,8 @@ def generate_question_hits(artist: Artist):
         page_nbr=0,
     )
 
+    nbr_generated = 0
+
     for song in songs:
         if _check_exists(ResponseType.ARTIST, QuestionSubType.HIT, artist.id):
             continue
@@ -42,6 +59,8 @@ def generate_question_hits(artist: Artist):
         question.sub_type = QuestionSubType.HIT
 
         db.session.add(question)
+        nbr_generated += 1
+
         db.session.commit()
 
         question_response = QuestionResponse(
@@ -51,13 +70,20 @@ def generate_question_hits(artist: Artist):
         db.session.add(question_response)
         db.session.commit()
 
+    return nbr_generated
+
 
 def generate_question_artist_picture(artist: Artist):
-    if artist.genius_profile_img_url is None or artist.genius_profile_img_url == "":
-        return
+    nbr_generated = 0
 
-    if _check_exists(ResponseType.ARTIST, QuestionSubType.ARTIST_PICTURE, artist.id):
-        return
+    if artist.genius_profile_img_url is None or artist.genius_profile_img_url == "":
+        return nbr_generated
+
+    if _check_exists(
+            ResponseType.ARTIST,
+            QuestionSubType.ARTIST_PICTURE,
+            artist.id):
+        return nbr_generated
 
     question = Question(f"Qui est cet artiste ?")
     question.type = ResponseType.ARTIST
@@ -65,6 +91,8 @@ def generate_question_artist_picture(artist: Artist):
     question.picture = artist.genius_profile_img_url
 
     db.session.add(question)
+    nbr_generated += 1
+
     db.session.commit()
 
     question_response = QuestionResponse(
@@ -73,6 +101,8 @@ def generate_question_artist_picture(artist: Artist):
 
     db.session.add(question_response)
     db.session.commit()
+
+    return nbr_generated
 
 
 def _check_exists(

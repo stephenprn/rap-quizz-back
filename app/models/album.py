@@ -41,6 +41,7 @@ class Album(Response):
         res.genius_url = data.get("url")
         res.genius_pyongs_count = data.get("pyongs_count")
         res.genius_hot = utils_json.get_nested_field(data, "stats.hot")
-        res.genius_pageviews = utils_json.get_nested_field(data, "stats.pageviews")
+        res.genius_pageviews = utils_json.get_nested_field(
+            data, "stats.pageviews")
 
         return res

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from datetime import datetime
 from math import floor
 
@@ -60,7 +60,7 @@ class QuizRoom:
         self.last_question_date = date or datetime.now()
 
     def get_question(self, index: int = None) -> Optional[dict]:
-        if index == None:
+        if index is None:
             index = self.index
 
         if index >= len(self.questions):
@@ -74,10 +74,11 @@ class QuizRoom:
         question_uuid: str,
         response_uuid: str = None,
         response_precise: str = None,
-    ) -> (bool, int, int):
+        responses_ranked_uuid: str = None,
+    ) -> Tuple[bool, int, int]:
         player = self.get_player(player_uuid)
 
-        if player == None:
+        if player is None:
             raise ValueError("Player not found in this quiz")
 
         if player.answer_status != QuizPlayerAnswerStatus.NONE:
@@ -87,6 +88,8 @@ class QuizRoom:
             response = response_uuid
         elif response_precise is not None:
             response = response_precise
+        elif responses_ranked_uuid is not None:
+            response = responses_ranked_uuid
 
         answer_correct = self.__check_right_response(question_uuid, response)
 
@@ -111,10 +114,8 @@ class QuizRoom:
             player.answer_status = QuizPlayerAnswerStatus.NONE
 
     def set_admin_if_not_exists(self) -> Optional[QuizPlayer]:
-        if (
-            len(self.players) == 0
-            or next((player for player in self.players if player.admin), None) != None
-        ):
+        if (len(self.players) == 0 or next(
+                (player for player in self.players if player.admin), None) is not None):
             return None
 
         new_admin = self.players[0]
@@ -125,7 +126,10 @@ class QuizRoom:
     def is_admin(self, player_uuid: str) -> bool:
         return self.get_player(player_uuid).admin
 
-    def set_question_scheduler(self, question_scheduler, question_scheduler_event: str):
+    def set_question_scheduler(
+            self,
+            question_scheduler,
+            question_scheduler_event: str):
         self.question_scheduler = question_scheduler
         self.question_scheduler_event = question_scheduler_event
 
@@ -143,8 +147,8 @@ class QuizRoom:
 
     def get_player(self, player_uuid: str) -> Optional[QuizPlayer]:
         return next(
-            (player for player in self.players if player.uuid == player_uuid), None
-        )
+            (player for player in self.players if player.uuid == player_uuid),
+            None)
 
     def __get_score(self):
         # for now, we only add 1 point / question
@@ -163,12 +167,14 @@ class QuizRoom:
             )
         )
 
-    def __check_right_response(self, question_uuid: str, response: str) -> bool:
+    def __check_right_response(
+            self,
+            question_uuid: str,
+            response: str) -> bool:
         question = next(
-            q for q in self.questions if q["question_dict"]["uuid"] == question_uuid
-        )
+            q for q in self.questions if q["question_dict"]["uuid"] == question_uuid)
 
-        if question == None:
+        if question is None:
             raise ValueError("Question not found in this quiz")
 
         return question["correct_response"] == response

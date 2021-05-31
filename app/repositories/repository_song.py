@@ -21,14 +21,15 @@ class SongRepository(RepositoryBase):
             query = query.filter(self.model.artist_id.in_(filter_artist_id_in))
 
         if filter_out_null_genius_pageviews:
-            query = query.filter(self.model.genius_pageviews != None)
+            query = query.filter(self.model.genius_pageviews is not None)
 
         return query
 
     def _sort_query(
         self,
         query,
-        order_genius_pageviews: Optional[bool] = None,  # true: asc, false: desc
+        # true: asc, false: desc
+        order_genius_pageviews: Optional[bool] = None,
         *args,
         **kwargs
     ):

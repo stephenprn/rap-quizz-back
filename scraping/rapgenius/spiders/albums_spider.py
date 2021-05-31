@@ -6,7 +6,7 @@ from datetime import datetime
 class AlbumsSpider(scrapy.Spider):
     name = "albums"
     MIN_YEAR = 2019
-    
+
     # for the moment, we miss all non "<a>" albums
     __FIRST_MONTH_SELECTOR_XPATH = "//b[contains(text(), 'Janvier')]/following-sibling::a"
     __NOT_FOUND_SELECTOR = ".render_404"
@@ -17,7 +17,6 @@ class AlbumsSpider(scrapy.Spider):
     def start_requests(self):
         for url in self.__get_urls():
             yield scrapy.Request(url=url, callback=self.parse)
-            
 
     def parse(self, response):
         if len(response.css(self.__NOT_FOUND_SELECTOR)) > 0:
@@ -41,7 +40,7 @@ class AlbumsSpider(scrapy.Spider):
 
             if album is not None:
                 date_artist_album += album
-            
+
             album_res = {
                 "url": node.css('a::attr(href)').extract_first(),
             }
@@ -58,9 +57,10 @@ class AlbumsSpider(scrapy.Spider):
 
             if ' : ' in date_artist:
                 date_artist = date_artist.split(' : ')
-                
+
                 album_res["artist"] = date_artist[1]
-                album_res["date"] = date_artist[0] + '/' + str(self.current_year)
+                album_res["date"] = date_artist[0] + \
+                    '/' + str(self.current_year)
             else:
                 album_res["artist"] = date_artist
                 album_res["date"] = "unknown"
@@ -68,22 +68,19 @@ class AlbumsSpider(scrapy.Spider):
             album_res["album"] = date_artist_album[1]
 
             res.append(album_res)
-        
-        with open('data.json', 'w') as f:
-            json.dump(res , f, ensure_ascii=False)
 
-    
+        with open('data.json', 'w') as f:
+            json.dump(res, f, ensure_ascii=False)
+
     def __get_urls(self):
         self.__init_year()
 
         while self.current_year > self.MIN_YEAR:
-            url = "https://genius.com/Genius-france-discographie-rap-{}-annotated".format(str(self.current_year))
+            url = "https://genius.com/Genius-france-discographie-rap-{}-annotated".format(
+                str(self.current_year))
             yield url
 
             self.current_year -= 1
-        
+
     def __init_year(self):
         self.current_year = datetime.now().year
-        
-
-

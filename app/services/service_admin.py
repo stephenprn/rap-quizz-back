@@ -6,15 +6,19 @@ from app.shared.db import db
 
 def init_users() -> None:
     admin_exists = (
-        db.session.query(User.id).filter_by(username="admin").scalar() is not None
-    )
+        db.session.query(
+            User.id).filter_by(
+            username="admin").scalar() is not None)
 
     if admin_exists:
         return
 
     admin = User(
-        "admin", "admin@admin.com", "password", role=UserRole.ADMIN, color="#000000"
-    )
+        "admin",
+        "admin@admin.com",
+        "password",
+        role=UserRole.ADMIN,
+        color="#000000")
 
     db.session.add(admin)
     db.session.commit()

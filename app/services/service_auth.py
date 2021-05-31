@@ -39,8 +39,16 @@ USER_COLORS = [
 
 
 def register(email: str, username: str, password: str) -> None:
-    check_length(password, "Password", PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)
-    check_length(username, "Username", USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH)
+    check_length(
+        password,
+        "Password",
+        PASSWORD_MIN_LENGTH,
+        PASSWORD_MAX_LENGTH)
+    check_length(
+        username,
+        "Username",
+        USERNAME_MIN_LENGTH,
+        USERNAME_MAX_LENGTH)
 
     email = email.lower()
 
@@ -64,7 +72,11 @@ def register(email: str, username: str, password: str) -> None:
     if username_exists:
         abort(409, "This username is already taken")
 
-    user = app.models.User(username, email, password, color=random.choice(USER_COLORS))
+    user = app.models.User(
+        username,
+        email,
+        password,
+        color=random.choice(USER_COLORS))
 
     db.session.add(user)
     db.session.commit()
@@ -100,7 +112,7 @@ def authenticate(email: str, password: str, with_id: bool = True) -> dict:
 
     user = db.session.query(app.models.User).filter_by(email=email).first()
 
-    if user == None:
+    if user is None:
         return None
 
     if not check_password(password, user.salt, user.password):
@@ -123,7 +135,7 @@ def get_current_identity() -> app.models.User:
         .first()
     )
 
-    if user == None:
+    if user is None:
         abort(403, "Invalid token")
 
     return user

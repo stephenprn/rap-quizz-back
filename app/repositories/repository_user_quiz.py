@@ -36,10 +36,12 @@ class UserQuizRepository(RepositoryBase):
             query = query.join().filter(self.model.user_id.in_(filter_user_uuid_in))
 
         if filter_null_user_leaved_quiz_status is not None:
-            query = query.filter(self.model.user_leaved_quiz_status == None)
+            query = query.filter(self.model.user_leaved_quiz_status is None)
 
         if filter_hidden is not None:
-            query = query.join(self.model.quiz).filter(Quiz.hidden == filter_hidden)
+            query = query.join(
+                self.model.quiz).filter(
+                Quiz.hidden == filter_hidden)
 
         return query
 

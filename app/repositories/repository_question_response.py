@@ -12,12 +12,19 @@ class QuestionResponseRepository(RepositoryBase):
     model = QuestionResponse
 
     def _load_only(
-        self, query, load_only_response_label: Optional[bool] = False, *args, **kwargs
-    ):
+            self,
+            query,
+            load_only_response_label: Optional[bool] = False,
+            *args,
+            **kwargs):
         if load_only_response_label:
-            query = query.join(self.model.response).options(
-                load_only(), joinedload(self.model.response).load_only("label", "uuid")
-            )
+            query = query.join(
+                self.model.response).options(
+                load_only(),
+                joinedload(
+                    self.model.response).load_only(
+                    "label",
+                    "uuid"))
 
         return query
 

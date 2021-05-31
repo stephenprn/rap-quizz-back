@@ -12,3 +12,6 @@ scrapalbums:
 
 compose:
 	docker-compose up -d
+
+format:
+	black app && autopep8 --in-place --aggressive --aggressive --recursive ./app

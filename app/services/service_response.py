@@ -37,13 +37,13 @@ def add_simple(label: str, type_: ResponseType) -> Response:
             filter_label=FilterLabel(label=label, ignore_case=True),
             filter_type_in=[type_],
         )
-        != None
+        is not None
     ):
         abort(409, f"{type_} {label} already exists")
 
     model = RESPONSE_TYPE_MODEL_MAP.get(type_)
 
-    if model == None:
+    if model is None:
         abort(400, f"This type is invalid: {type_}")
 
     response = model(label)
@@ -60,7 +60,7 @@ def add(response: Response):
             filter_label=FilterLabel(label=response.label, ignore_case=True),
             filter_type_in=[response.type],
         )
-        != None
+        is not None
     ):
         abort(409, f"{response.type} {response.label} already exists")
 

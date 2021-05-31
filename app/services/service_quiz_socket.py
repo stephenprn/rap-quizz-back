@@ -69,8 +69,9 @@ def start_quiz(quiz_uuid: str) -> None:
         datetime.now() + timedelta(seconds=START_COUNTDOWN_SEC)
     )
     __schedule_timer_next_question(
-        quiz_uuid, question_duration=quiz_room.question_duration, first_schedule=True
-    )
+        quiz_uuid,
+        question_duration=quiz_room.question_duration,
+        first_schedule=True)
 
 
 def answer_response(
@@ -78,6 +79,7 @@ def answer_response(
     question_uuid: str,
     response_uuid: str = None,
     response_precise: str = None,
+    responses_ranked_uuid: str = None,
 ) -> None:
     room_name = __get_room_name(quiz_uuid)
     quizzes[room_name]
@@ -88,6 +90,7 @@ def answer_response(
         question_uuid,
         response_uuid=response_uuid,
         response_precise=response_precise,
+        responses_ranked_uuid=responses_ranked_uuid,
     )
 
     __emit_event(
@@ -165,22 +168,25 @@ def __leave_room(quiz_uuid: str, user: dict) -> None:
     else:
         new_admin = quiz_room.set_admin_if_not_exists()
 
-        if new_admin != None:
+        if new_admin is not None:
             __emit_event(
                 room_name,
                 "admin_set",
                 {"uuid": new_admin.uuid, "username": new_admin.username},
             )
             user_quiz = repo_user_quiz.get(
-                filter_quiz_uuid_in=[quiz_uuid], filter_user_uuid_in=[user_uuid]
-            )
+                filter_quiz_uuid_in=[quiz_uuid],
+                filter_user_uuid_in=[user_uuid])
             user_quiz.status = UserQuizStatus.ADMIN
             db.session.commit()
 
     leave_room(room_name)
 
 
-def __emit_event(room_name: str, event_name: str, event_body: dict = None) -> None:
+def __emit_event(
+        room_name: str,
+        event_name: str,
+        event_body: dict = None) -> None:
     emit(
         event_name,
         {"timestamp": utils_date.get_current_datetime_string(), "body": event_body},
@@ -214,7 +220,7 @@ def __next_question(quiz_uuid: str) -> None:
 
     question = quiz_room.get_question()
 
-    if question == None:
+    if question is None:
         __emit_event(room_name, "finished")
 
         quiz_room.set_status(QuizStatus.FINISHED)
@@ -259,6 +265,7 @@ def __schedule_timer_next_question(
     if first_schedule:
         question_duration += START_COUNTDOWN_SEC
 
-    event = scheduler.enter(question_duration, 1, __next_question, (quiz_uuid,))
+    event = scheduler.enter(
+        question_duration, 1, __next_question, (quiz_uuid,))
     quizzes[room_name].set_question_scheduler(scheduler, event)
     scheduler.run()

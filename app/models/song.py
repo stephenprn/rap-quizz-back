@@ -29,7 +29,10 @@ class Song(Response):
     genius_pageviews = db.Column(db.Integer, nullable=True)
 
     artist_id = db.Column(db.Integer, db.ForeignKey("artist.id"))
-    artist = relationship(Artist, back_populates="songs", foreign_keys=[artist_id])
+    artist = relationship(
+        Artist,
+        back_populates="songs",
+        foreign_keys=[artist_id])
 
     def __init__(self, label: str):
         super().__init__(label, ResponseType.SONG)
@@ -68,7 +71,8 @@ class Song(Response):
         res.genius_url = data.get("url")
         res.genius_pyongs_count = data.get("pyongs_count")
         res.genius_hot = utils_json.get_nested_field(data, "stats.hot")
-        res.genius_pageviews = utils_json.get_nested_field(data, "stats.pageviews")
+        res.genius_pageviews = utils_json.get_nested_field(
+            data, "stats.pageviews")
 
         res.artist_id = artist.id
 

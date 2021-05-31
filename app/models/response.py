@@ -17,6 +17,16 @@ class ResponseType(enum.Enum):
     def is_precise(self):
         return self.value == ResponseType.YEAR.value
 
+    @property
+    def is_regular(self):
+        return self.value in [
+            ResponseType.ARTIST.value,
+            ResponseType.ALBUM.value,
+            ResponseType.DATE.value,
+            ResponseType.OTHER.value,
+            ResponseType.SONG.value,
+        ]
+
 
 class Response(ModelBase):
     __tablename__ = "response"
@@ -27,7 +37,9 @@ class Response(ModelBase):
 
     questions = relationship("QuestionResponse", back_populates="response")
 
-    __mapper_args__ = {"polymorphic_identity": "response", "polymorphic_on": type}
+    __mapper_args__ = {
+        "polymorphic_identity": "response",
+        "polymorphic_on": type}
 
     def __init__(self, label: str, type: ResponseType, hidden: bool = True):
         self.label = label

@@ -29,7 +29,10 @@ class Artist(Response):
     genius_profile_img_url = db.Column(db.String(128), nullable=True)
     genius_iq = db.Column(db.Integer, nullable=True)
 
-    songs = relationship("Song", back_populates="artist", foreign_keys="Song.artist_id")
+    songs = relationship(
+        "Song",
+        back_populates="artist",
+        foreign_keys="Song.artist_id")
 
     @declared_attr
     def genius_id(cls):
@@ -59,7 +62,8 @@ class Artist(Response):
 
         res.name = data.get("name")
         res.alternate_names = json.dumps(data.get("alternate_names"))
-        res.description = utils_json.get_nested_field(data, "description.plain")
+        res.description = utils_json.get_nested_field(
+            data, "description.plain")
 
         res.fb_name = data.get("facebook_name")
         res.instagram_name = data.get("instagram_name")

@@ -23,7 +23,7 @@ class ArtistSongsCrawler(BaseCrawler):
     def get(self, ids_: List[int], text_format: str = "plain"):
         artist = self.artist_repo.get(filter_genius_id_in=[ids_[0]])
 
-        if artist == None:
+        if artist is None:
             raise ValueError("Artist does not exist")
 
         page = 1
@@ -34,11 +34,12 @@ class ArtistSongsCrawler(BaseCrawler):
                 ids_, text_format, additional_params={"page": page}
             )
 
-            next_page = utils_json.get_nested_field(res_dict, "response.next_page")
+            next_page = utils_json.get_nested_field(
+                res_dict, "response.next_page")
             res_dict = utils_json.get_nested_field(res_dict, self.base_path)
             res += [self.model.from_dict(r, artist) for r in res_dict]
 
-            if next_page == None:
+            if next_page is None:
                 break
 
             page = next_page

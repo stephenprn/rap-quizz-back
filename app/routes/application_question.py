@@ -27,7 +27,9 @@ def add_question():
         try:
             response_type = ResponseType[request.form.get("response_type")]
         except Exception:
-            abort(400, f'Invalid response type: {request.form.get("response_type")}')
+            abort(
+                400,
+                f'Invalid response type: {request.form.get("response_type")}')
     else:
         response_type = None
 
@@ -35,13 +37,19 @@ def add_question():
     false_responses_uuid = get_array_from_delimited_list(
         request.form.get("false_responses_uuid"), name="false_responses_uuid"
     )
+    ranked_responses_uuid = get_array_from_delimited_list(
+        request.form.get("ranked_responses_uuid"), name="ranked_responses_uuid"
+    )
     year = request.form.get("year")
+    ranking = to_bool(request.form.get("ranking"))
 
     return service_question.add(
         label,
         response_type,
-        true_response_uuid,
+        ranking,
+        true_response_uuid=true_response_uuid,
         false_responses_uuid=false_responses_uuid,
+        ranked_responses_uuid=ranked_responses_uuid,
         year=year,
     )
 
@@ -59,7 +67,7 @@ def list_questions(nbr_results: int, page_nbr: int):
 @jwt_required
 @has_role([UserRole.ADMIN])
 def edit(question_uuid: str):
-    if request.form.get("hidden") != None:
+    if request.form.get("hidden") is not None:
         try:
             hidden = to_bool(request.form.get("hidden"))
         except ValueError:
@@ -74,35 +82,45 @@ def edit(question_uuid: str):
         try:
             response_type = ResponseType[request.form.get("response_type")]
         except Exception:
-            abort(400, f'Invalid response type: {request.form.get("response_type")}')
+            abort(
+                400,
+                f'Invalid response type: {request.form.get("response_type")}')
     else:
         response_type = None
 
-    if request.form.get("label") != None:
+    if request.form.get("label") is not None:
         label = request.form.get("label")
     else:
         label = None
 
-    if request.form.get("true_response_uuid") != None:
+    if request.form.get("true_response_uuid") is not None:
         true_response_uuid = request.form.get("true_response_uuid")
     else:
         true_response_uuid = None
 
-    if request.form.get("false_responses_uuid") != None:
+    if request.form.get("false_responses_uuid") is not None:
         false_responses_uuid = get_array_from_delimited_list(
-            request.form.get("false_responses_uuid"), name="false_responses_uuid"
-        )
+            request.form.get("false_responses_uuid"), name="false_responses_uuid")
     else:
         false_responses_uuid = None
 
+    if request.form.get("ranked_responses_uuid") is not None:
+        ranked_responses_uuid = get_array_from_delimited_list(
+            request.form.get("ranked_responses_uuid"), name="ranked_responses_uuid")
+    else:
+        ranked_responses_uuid = None
+
     year = request.form.get("year")
+    ranking = to_bool(request.form.get("ranking"))
 
     service_question.edit(
         question_uuid,
         hidden=hidden,
+        ranking=ranking,
         label=label,
         true_response_uuid=true_response_uuid,
         false_responses_uuid=false_responses_uuid,
+        ranked_responses_uuid=ranked_responses_uuid,
         response_type=response_type,
         year=year,
     )

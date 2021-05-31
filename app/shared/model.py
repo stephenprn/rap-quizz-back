@@ -23,14 +23,16 @@ class ModelCommon(db.Model):
                 else "<deferred>"
             )
 
-        attrs = " ".join([f"{attr.key}={ga(attr.key)}" for attr in state.attrs])
+        attrs = " ".join(
+            [f"{attr.key}={ga(attr.key)}" for attr in state.attrs])
         return f"<{self.__tablename__} {attrs}>"
 
     def to_dict(self) -> dict:
         state = inspect(self)
 
         # load of non-relationship properties
-        # add property to dict only if column is loaded (can be excluded with load_only)
+        # add property to dict only if column is loaded (can be excluded with
+        # load_only)
         res = {
             c.name: getattr(self, c.name)
             for c in self.__mapper__.columns
@@ -64,7 +66,11 @@ class ModelBase(ModelCommon):
     model_type = ModelType.BASE
 
     id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(db.String, default=generate_uuid, unique=True, nullable=False)
+    uuid = db.Column(
+        db.String,
+        default=generate_uuid,
+        unique=True,
+        nullable=False)
 
     creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
     update_date = db.Column(

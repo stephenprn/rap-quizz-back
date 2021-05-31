@@ -10,6 +10,7 @@ from app.shared.model import ModelBase
 class QuestionSubType(enum.Enum):
     HIT = "HIT"
     ARTIST_PICTURE = "ARTIST_PICTURE"
+    RANKING = "RANKING"
     UNKNOWN = "UNKNOWN"
 
 

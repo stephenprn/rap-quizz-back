@@ -8,8 +8,10 @@ from app.utils import utils_json
 
 class BaseCrawler(ABC):
     def __init__(
-        self, resources: List[str], multiple: bool = False, nbr_retries: int = 5
-    ):
+            self,
+            resources: List[str],
+            multiple: bool = False,
+            nbr_retries: int = 5):
         self.resources = resources
         self.multiple = multiple
         self.nbr_retries = nbr_retries
@@ -34,16 +36,12 @@ class BaseCrawler(ABC):
         while try_nbr < self.nbr_retries:
             params = {"text_format": text_format}
 
-            if additional_params != None:
+            if additional_params is not None:
                 params = {**params, **additional_params}
 
             r = requests.get(
-                self._build_url(ids_),
-                params=params,
-                headers={
-                    "Authorization": f'Bearer {os.environ.get("RAPGENIUS_BEARER_TOKEN")}'
-                },
-            )
+                self._build_url(ids_), params=params, headers={
+                    "Authorization": f'Bearer {os.environ.get("RAPGENIUS_BEARER_TOKEN")}'}, )
 
             if r.status_code == 200:
                 return r.json()

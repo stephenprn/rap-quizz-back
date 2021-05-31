@@ -28,29 +28,55 @@ LABEL_MAX_LENGTH = 100
 YEAR_MIN = 1900
 YEAR_MAX = 2100
 
+QUIZ_RANKING_NBR_RESPONSES_MIN = 3
+QUIZ_RANKING_NBR_RESPONSES_MAX = 10
+
 
 def add(
     label: str,
     response_type: ResponseType,
-    true_response_uuid: str,
+    ranking: bool,
+    true_response_uuid: str = None,
     false_responses_uuid: List[str] = None,
+    ranked_responses_uuid: List[str] = None,
     year: str = None,
 ) -> Question:
     check_length(label, "Label", LABEL_MIN_LENGTH, LABEL_MAX_LENGTH)
 
-    if not response_type.is_precise and true_response_uuid is None:
+    if response_type.is_regular and not ranking and not true_response_uuid:
         abort(400, "True response must be specified through true_response_uuid")
 
-    if not response_type.is_precise and true_response_uuid in false_responses_uuid:
+    if (
+        response_type.is_regular
+        and not ranking
+        and true_response_uuid in false_responses_uuid
+    ):
         abort(400, "True response cannot be in false responses")
 
+    if response_type.is_regular and ranking and not ranked_responses_uuid:
+        abort(400, "Ranked responses must be specified through ranked_responses_uuid")
+
     if (
-        not response_type.is_precise
+        response_type.is_regular
+        and not ranking
         and len(false_responses_uuid) + 1 > QUIZ_DEFAULT_NBR_RESPONSES
     ):
         abort(
             400,
             f"A question can have a maximum of {QUIZ_DEFAULT_NBR_RESPONSES} responses",
+        )
+
+    if (
+        response_type.is_regular
+        and ranking
+        and (
+            len(ranked_responses_uuid) > QUIZ_RANKING_NBR_RESPONSES_MAX
+            or len(ranked_responses_uuid) < QUIZ_RANKING_NBR_RESPONSES_MIN
+        )
+    ):
+        abort(
+            400,
+            f"A ranked question must have between {QUIZ_RANKING_NBR_RESPONSES_MIN} and {QUIZ_RANKING_NBR_RESPONSES_MAX} responses",
         )
 
     if response_type.is_precise:
@@ -65,13 +91,21 @@ def add(
         if int(year) > YEAR_MAX or int(year) < YEAR_MIN:
             abort(400, f"Year must be between {YEAR_MIN} and {YEAR_MAX}")
 
-    if repo_question.get(filter_label=FilterLabel(label=label, ignore_case=True)):
+    if repo_question.get(
+        filter_label=FilterLabel(
+            label=label,
+            ignore_case=True)):
         abort(409, "This question already exists")
 
-    if not response_type.is_precise:
-        responses = repo_response.list_(
-            filter_uuid_in=[true_response_uuid] + false_responses_uuid
-        )
+    if response_type.is_regular:
+        if ranking:
+            responses_unordered = repo_response.list_(
+                filter_uuid_in=ranked_responses_uuid
+            )
+        else:
+            responses = repo_response.list_(
+                filter_uuid_in=[true_response_uuid] + false_responses_uuid
+            )
 
         if any([r.type != response_type for r in responses]):
             abort(
@@ -79,23 +113,32 @@ def add(
                 f"Responses specified must be the same type as the question type: {response_type}",
             )
 
-        true_response = next(
-            (res for res in responses if res.uuid == true_response_uuid), None
-        )
-        false_responses = [res for res in responses if res.uuid in false_responses_uuid]
+        if not ranking:
+            true_response = next(
+                (res for res in responses if res.uuid == true_response_uuid), None)
+            false_responses = [
+                res for res in responses if res.uuid in false_responses_uuid
+            ]
 
-        if true_response == None:
-            abort(404, "Right response specified does not exist")
+            if true_response is None:
+                abort(404, "Right response specified does not exist")
 
-        if len(false_responses) != len(false_responses_uuid):
+            if len(false_responses) != len(false_responses_uuid):
+                abort(
+                    404,
+                    f"{len(false_responses_uuid) - len(false_responses)} false responses specified were not found",
+                )
+        elif ranking and len(ranked_responses_uuid) != len(responses_unordered):
             abort(
                 404,
-                f"{len(false_responses_uuid) - len(false_responses)} false responses specified were not found",
+                f"{len(ranked_responses_uuid) - len(responses_unordered)} ranked responses specified were not found",
             )
 
     question = Question(label)
     question.type = response_type
-    question.sub_type = QuestionSubType.UNKNOWN
+    question.sub_type = (
+        QuestionSubType.UNKNOWN if not ranking else QuestionSubType.RANKING
+    )
 
     if response_type.is_precise:
         question.response_precise = year
@@ -106,17 +149,23 @@ def add(
     if response_type.is_precise:
         return question
 
-    question_response = QuestionResponse(
-        question.id, true_response.id, QuestionResponseStatus.CORRECT
-    )
-
-    db.session.add(question_response)
-
-    for res in false_responses:
+    if not ranking:
         question_response = QuestionResponse(
-            question.id, res.id, QuestionResponseStatus.WRONG
+            question.id, true_response.id, QuestionResponseStatus.CORRECT
         )
+
         db.session.add(question_response)
+
+        for res in false_responses:
+            question_response = QuestionResponse(
+                question.id, res.id, QuestionResponseStatus.WRONG
+            )
+            db.session.add(question_response)
+    else:
+        for i, uuid in enumerate(ranked_responses_uuid):
+            res = next(r for r in responses_unordered if r.uuid == uuid)
+            question_response = QuestionResponse(question.id, res.id, index=i)
+            db.session.add(question_response)
 
     db.session.commit()
 
@@ -150,9 +199,11 @@ def edit(
     question_uuid: str,
     hidden: bool = None,
     label: str = None,
+    ranking: bool = None,
     response_type: Optional[ResponseType] = None,
     true_response_uuid: Optional[str] = None,
     false_responses_uuid: Optional[List[str]] = None,
+    ranked_responses_uuid: List[str] = None,
     year: str = None,
 ):
     question = repo_question.get(
@@ -193,11 +244,9 @@ def edit(
     else:
         question.year = None
 
-    if not question.type.is_precise and (
-        true_response_uuid is not None or false_responses_uuid is not None
-    ):
+    if (question.type.is_regular and not ranking and (
+            true_response_uuid is not None or false_responses_uuid is not None)):
         question.responses = []
-
         responses_filter_uuid_in = []
 
         if true_response_uuid is not None:
@@ -207,15 +256,13 @@ def edit(
             responses_filter_uuid_in += false_responses_uuid
 
         responses = repo_response.list_(
-            filter_uuid_in=[true_response_uuid] + false_responses_uuid
-        )
+            filter_uuid_in=responses_filter_uuid_in)
 
         if true_response_uuid is not None:
             true_response = next(
-                (res for res in responses if res.uuid == true_response_uuid), None
-            )
+                (res for res in responses if res.uuid == true_response_uuid), None)
 
-            if true_response == None:
+            if true_response is None:
                 abort(404, "Right response specified does not exist")
 
         if false_responses_uuid is not None:
@@ -239,6 +286,22 @@ def edit(
             question_response = QuestionResponse(
                 question.id, res.id, QuestionResponseStatus.WRONG
             )
+            db.session.add(question_response)
+    elif question.type.is_regular and ranking and ranked_responses_uuid is not None:
+        question.responses = []
+
+        responses_unordered = repo_response.list_(
+            filter_uuid_in=ranked_responses_uuid)
+
+        if len(responses_unordered) != len(ranked_responses_uuid):
+            abort(
+                404,
+                f"{len(ranked_responses_uuid) - len(responses_unordered)} ranked responses specified were not found",
+            )
+
+        for i, uuid in enumerate(ranked_responses_uuid):
+            res = next(r for r in responses_unordered if r.uuid == uuid)
+            question_response = QuestionResponse(question.id, res.id, index=i)
             db.session.add(question_response)
 
     db.session.add(question)

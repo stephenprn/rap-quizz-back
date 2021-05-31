@@ -30,12 +30,16 @@ class QuizRepository(RepositoryBase):
         self, query, load_only_users: Optional[bool] = False, *args, **kwargs
     ):
         if load_only_users:
-            query = query.join(self.model.users).options(
-                joinedload(self.model.users)
-                .load_only("status", "creation_date")
-                .options(
-                    joinedload(UserQuiz.user).load_only("username", "uuid", "color")
-                )
-            )
+            query = query.join(
+                self.model.users).options(
+                joinedload(
+                    self.model.users) .load_only(
+                    "status",
+                    "creation_date") .options(
+                    joinedload(
+                        UserQuiz.user).load_only(
+                            "username",
+                            "uuid",
+                        "color")))
 
         return query

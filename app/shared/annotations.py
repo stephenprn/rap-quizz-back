@@ -16,16 +16,16 @@ def pagination(nbr_results_default=None) -> Callable:
             try:
                 page_nbr = int(request.args.get("page_nbr"))
 
-                if page_nbr == None or page_nbr == "":
+                if page_nbr is None or page_nbr == "":
                     page_nbr = 0
             except Exception:
                 abort(400, "Page number is required: page_nbr")
 
-            if nbr_results_default != None:
+            if nbr_results_default is not None:
                 try:
                     nbr_results = int(request.args.get("nbr_results"))
 
-                    if nbr_results == None or nbr_results == "":
+                    if nbr_results is None or nbr_results == "":
                         nbr_results = nbr_results_default
                 except Exception:
                     nbr_results = nbr_results_default
@@ -94,7 +94,7 @@ def convert_to_dict(res, paginated=False) -> Optional[dict]:
 
 
 def convert_to_json(res_dict, paginated=False) -> Optional[str]:
-    if res_dict != None:
+    if res_dict is not None:
         return json.dumps(res_dict, default=default_handler, sort_keys=True)
 
     return None

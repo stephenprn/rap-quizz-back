@@ -20,7 +20,10 @@ def init_test_users():
 
     for username in ["test", "test1", "test2"]:
         try:
-            service_auth.register(username + "@test.com", username, PASSWORD_TEST)
+            service_auth.register(
+                username + "@test.com",
+                username,
+                PASSWORD_TEST)
         except exceptions.Conflict:
             pass
 
@@ -52,4 +55,4 @@ def init_test_questions():
     if not artist:
         artist = service_crawler.crawl_artist_full(vald_genius_id)
 
-    service_question_generator.generate_questions_artist(artist)
+    service_question_generator.generate_questions_artist(artist=artist)

@@ -1,26 +1,33 @@
-from flask import Blueprint, Response
+from flask import Blueprint, Response, request
 from flask_jwt_extended import jwt_required
 
 from app.services import service_crawler
-from app.shared.annotations import has_role
+from app.shared.annotations import has_role, pagination
+from app.models import UserRole
+from app.utils.utils_string import get_array_from_delimited_list
 
 application_admin = Blueprint("application_admin", __name__)
 
 
-@application_profile.route("/")
+@application_admin.route("/")
 def hello():
     return "hello admin"
 
 
-@application_admin.route("/crawl-artist/<genius_id>")
+@application_admin.route("/crawl-artists", methods=["POST"])
 @jwt_required
 @has_role([UserRole.ADMIN])
-def get_history(genius_id: str):
-    try:
-        genius_id = int(genius_id)
-    except Exception:
-        abort(400, f"Bad format for genius id: {genius_id}")
+def crawl_artists():
+    genius_ids = get_array_from_delimited_list(
+        request.form.get("genius_ids"), name="genius_ids"
+    )
 
-    service_crawler.crawl_artist_full(genius_id)
+    try:
+        genius_ids = [int(id_) for id_ in genius_ids]
+    except Exception:
+        abort(400, "Format of genius_ids is incorrect")
+
+    for id_ in genius_ids:
+        service_crawler.crawl_artist_full(id_)
 
     return Response(status=200)

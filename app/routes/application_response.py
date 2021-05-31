@@ -24,8 +24,8 @@ def get_list_from_search_txt():
     search_txt = request.args.get("search_txt")
     type_ = request.args.get("type")
     responses_uuid_exclude = get_array_from_delimited_list(
-        request.args.get("responses_uuid_exclude"), name="responses_uuid_exclude"
-    )
+        request.args.get("responses_uuid_exclude"),
+        name="responses_uuid_exclude")
 
     return service_response.get_list_from_search_txt(
         search_txt, type_, responses_uuid_exclude
@@ -46,7 +46,7 @@ def add_response():
 @jwt_required
 @has_role([UserRole.ADMIN])
 def edit(response_uuid: str):
-    if request.form.get("hidden") != None:
+    if request.form.get("hidden") is not None:
         try:
             hidden = to_bool(request.form.get("hidden"))
         except ValueError:
@@ -57,7 +57,7 @@ def edit(response_uuid: str):
     else:
         hidden = None
 
-    if request.form.get("label") != None:
+    if request.form.get("label") is not None:
         label = request.form.get("label")
     else:
         label = None

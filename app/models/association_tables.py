@@ -14,7 +14,10 @@ class UserQuizStatus(enum.Enum):
 class UserQuiz(ModelAssociation):
     __tablename__ = "user_quiz"
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        primary_key=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey("quiz.id"), primary_key=True)
 
     user = relationship("User", back_populates="quizzes")
@@ -51,8 +54,14 @@ class UserQuestionStatus(enum.Enum):
 class UserQuestion(ModelAssociation):
     __tablename__ = "user_question"
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        primary_key=True)
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("question.id"),
+        primary_key=True)
 
     user = relationship("User", back_populates="questions")
     question = relationship("Question", back_populates="users")
@@ -65,7 +74,10 @@ class QuizQuestion(ModelAssociation):
     id = db.Column(db.Integer, unique=True)
 
     quiz_id = db.Column(db.Integer, db.ForeignKey("quiz.id"), primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("question.id"),
+        primary_key=True)
 
     quiz = relationship("Quiz", back_populates="questions")
     question = relationship("Question", back_populates="quizzes")
@@ -88,9 +100,14 @@ class QuizQuestionResponse(ModelAssociation):
     quiz_question_id = db.Column(
         db.Integer, db.ForeignKey("quiz_question.id"), primary_key=True
     )
-    response_id = db.Column(db.Integer, db.ForeignKey("response.id"), primary_key=True)
+    response_id = db.Column(
+        db.Integer,
+        db.ForeignKey("response.id"),
+        primary_key=True)
 
-    quiz_question = relationship("QuizQuestion", back_populates="responses_false")
+    quiz_question = relationship(
+        "QuizQuestion",
+        back_populates="responses_false")
     response = relationship("Response")
 
     def __init__(self, quiz_question_id: int, response_id: int):
@@ -109,21 +126,30 @@ class QuestionResponseStatus(enum.Enum):
 class QuestionResponse(ModelAssociation):
     __tablename__ = "question_response"
 
-    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), primary_key=True)
-    response_id = db.Column(db.Integer, db.ForeignKey("response.id"), primary_key=True)
+    question_id = db.Column(
+        db.Integer,
+        db.ForeignKey("question.id"),
+        primary_key=True)
+    response_id = db.Column(
+        db.Integer,
+        db.ForeignKey("response.id"),
+        primary_key=True)
 
     question = relationship("Question", back_populates="responses")
     response = relationship("Response", back_populates="questions")
 
     status = db.Column(db.Enum(QuestionResponseStatus), nullable=False)
+    index = db.Column(db.Integer, nullable=True)
 
     def __init__(
         self,
         question_id: int,
         response_id: int,
         status: QuestionResponseStatus = QuestionResponseStatus.CORRECT,
+        index: int = None,
     ):
         self.question_id = question_id
         self.response_id = response_id
 
         self.status = status
+        self.index = index

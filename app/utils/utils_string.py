@@ -33,19 +33,27 @@ def normalize_string(text: str, replace_spaces: str = " ") -> str:
     return replace_spaces.join(sub_texts)
 
 
-def check_length(text: str, name: str, min_length: int, max_length: int = None) -> None:
-    if text == None:
+def check_length(
+        text: str,
+        name: str,
+        min_length: int,
+        max_length: int = None) -> None:
+    if text is None:
         abort(400, "{} must be specified".format(name, str(min_length)))
 
     if len(text) < min_length:
         abort(
-            400, "{} must be at least {} characters long".format(name, str(min_length))
-        )
+            400,
+            "{} must be at least {} characters long".format(
+                name,
+                str(min_length)))
 
-    if max_length != None and len(text) > max_length:
+    if max_length is not None and len(text) > max_length:
         abort(
             400,
-            "{} must be no more than {} characters long".format(name, str(min_length)),
+            "{} must be no more than {} characters long".format(
+                name,
+                str(min_length)),
         )
 
 
@@ -64,7 +72,7 @@ def to_bool(text: str):
 def get_array_from_delimited_list(
     delimited_string_list: str, name: str = "list", separator: str = ","
 ):
-    if delimited_string_list == None or delimited_string_list == "":
+    if delimited_string_list is None or delimited_string_list == "":
         return []
 
     try:
