@@ -17,6 +17,8 @@ class SongRepository(RepositoryBase):
         *args,
         **kwargs
     ):
+        query = self._filter_query_common(query, *args, **kwargs)
+
         if filter_artist_id_in is not None:
             query = query.filter(self.model.artist_id.in_(filter_artist_id_in))
 

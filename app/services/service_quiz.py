@@ -120,8 +120,7 @@ def join_quiz(quiz_url: str) -> Quiz:
 
     if (
         repo_user_quiz.count(
-            filter_quiz_id_in=[
-                quiz.id], filter_null_user_leaved_quiz_status=True
+            filter_quiz_id_in=[quiz.id], filter_null_user_leaved_quiz_status=True
         )
         >= QUIZ_MAX_PLAYERS
     ):

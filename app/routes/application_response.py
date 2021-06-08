@@ -44,7 +44,7 @@ def add_response():
 
 @application_response.route("/edit/<response_uuid>", methods=["POST"])
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 def edit(response_uuid: str):
     if request.form.get("hidden") is not None:
         try:
@@ -69,7 +69,7 @@ def edit(response_uuid: str):
 
 @application_response.route("/list")
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 @to_json(paginated=True)
 @pagination(20)
 def list_questions(nbr_results: int, page_nbr: int):

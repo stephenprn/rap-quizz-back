@@ -13,7 +13,9 @@ repo_artist = ArtistRepository()
 
 
 def crawl_artist_full(id_: int) -> Artist:
-    if not repo_artist.get(filter_genius_id_in=[id_]):
+    artist = repo_artist.get(filter_genius_id_in=[id_])
+
+    if not artist:
         artist = ArtistCrawler().get([id_])
 
     try:

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm.query import Query
@@ -41,7 +41,7 @@ class RepositoryBase:
         db.session.commit()
 
     def _filter_query(self, query, *args, **kwargs):
-        return query
+        return self._filter_query_common(query, *args, **kwargs)
 
     def _load_only(self, query, *args, **kwargs):
         return query
@@ -77,6 +77,22 @@ class RepositoryBase:
                 order_func = desc
 
             query = query.order_by(order_func(self.model.update_date))
+
+        return query
+
+    def _filter_query_common(
+        self,
+        query,
+        filter_uuid_in: Optional[List[str]] = None,
+        filter_id_in: Optional[List[int]] = None,
+        *args,
+        **kwargs
+    ):
+        if filter_uuid_in is not None:
+            query = query.filter(self.model.uuid.in_(filter_uuid_in))
+
+        if filter_id_in is not None:
+            query = query.filter(self.model.id.in_(filter_id_in))
 
         return query
 

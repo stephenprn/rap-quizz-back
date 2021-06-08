@@ -33,6 +33,8 @@ class QuestionRepository(RepositoryBase):
         *args,
         **kwargs
     ):
+        query = self._filter_query_common(query, *args, **kwargs)
+
         if filter_label is not None:
             if filter_label.ignore_case:
                 query = query.filter(
@@ -54,8 +56,7 @@ class QuestionRepository(RepositoryBase):
             query = query.join(
                 self.model.responses).filter(
                 and_(
-                    QuestionResponse.response_id.in_(
-                        filter_true_response_id_in),
+                    QuestionResponse.response_id.in_(filter_true_response_id_in),
                     QuestionResponse.status == QuestionResponseStatus.CORRECT,
                 ))
 

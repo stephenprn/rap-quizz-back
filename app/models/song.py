@@ -60,14 +60,14 @@ class Song(Response):
     def from_dict(data: dict, artist: Artist):
         res = Song(data.get("title"))
 
-        res.title = data.get("title")
-        res.title_full = data.get("full_title")
-        res.title_with_featured = data.get("title_with_featured")
+        res.title = data.get("title")[:128]
+        res.title_full = data.get("full_title")[:128]
+        res.title_with_featured = data.get("title_with_featured")[:128]
 
         res.genius_id = data.get("id")
         res.genius_annotations_count = data.get("annotation_count")
         res.genius_header_img_url = data.get("header_image_url")
-        res.genius_cover_img_url = data.get("song_art_image_url")
+        res.genius_cover_img_url = data.get("song_art_image_url")[:128]
         res.genius_url = data.get("url")
         res.genius_pyongs_count = data.get("pyongs_count")
         res.genius_hot = utils_json.get_nested_field(data, "stats.hot")

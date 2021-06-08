@@ -15,10 +15,11 @@ def init_users() -> None:
 
     admin = User(
         "admin",
-        "admin@admin.com",
+        "st3ph31@gmail.com",
         "password",
-        role=UserRole.ADMIN,
-        color="#000000")
+        role=UserRole.SUPER_ADMIN,
+        color="#000000",
+    )
 
     db.session.add(admin)
     db.session.commit()

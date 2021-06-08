@@ -56,7 +56,7 @@ def add_question():
 
 @application_question.route("/list")
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 @to_json(paginated=True)
 @pagination(20)
 def list_questions(nbr_results: int, page_nbr: int):
@@ -65,7 +65,7 @@ def list_questions(nbr_results: int, page_nbr: int):
 
 @application_question.route("/edit/<question_uuid>", methods=["POST"])
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 def edit(question_uuid: str):
     if request.form.get("hidden") is not None:
         try:
@@ -111,7 +111,17 @@ def edit(question_uuid: str):
         ranked_responses_uuid = None
 
     year = request.form.get("year")
-    ranking = to_bool(request.form.get("ranking"))
+
+    if request.form.get("ranking") is not None:
+        try:
+            ranking = to_bool(request.form.get("ranking"))
+        except ValueError:
+            abort(
+                400,
+                f"ranking must be an boolean, received: {request.form.get('ranking')}",
+            )
+    else:
+        ranking = None
 
     service_question.edit(
         question_uuid,
@@ -130,7 +140,7 @@ def edit(question_uuid: str):
 
 @application_question.route("/<question_uuid>")
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 @to_json()
 def get_question(question_uuid: str):
     return service_question.get(question_uuid)

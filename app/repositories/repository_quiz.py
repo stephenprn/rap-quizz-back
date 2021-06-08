@@ -11,18 +11,12 @@ class QuizRepository(RepositoryBase):
     model = Quiz
 
     def _filter_query(
-        self,
-        query,
-        filter_url_in: Optional[List[str]] = None,
-        filter_uuid_in: Optional[List[str]] = None,
-        *args,
-        **kwargs
+        self, query, filter_url_in: Optional[List[str]] = None, *args, **kwargs
     ):
+        query = self._filter_query_common(query, *args, **kwargs)
+
         if filter_url_in is not None:
             query = query.filter(self.model.url.in_(filter_url_in))
-
-        if filter_uuid_in is not None:
-            query = query.filter(self.model.uuid.in_(filter_uuid_in))
 
         return query
 

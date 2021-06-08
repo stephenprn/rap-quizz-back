@@ -114,8 +114,11 @@ class QuizRoom:
             player.answer_status = QuizPlayerAnswerStatus.NONE
 
     def set_admin_if_not_exists(self) -> Optional[QuizPlayer]:
-        if (len(self.players) == 0 or next(
-                (player for player in self.players if player.admin), None) is not None):
+        if (
+            len(self.players) == 0
+            or next((player for player in self.players if player.admin), None)
+            is not None
+        ):
             return None
 
         new_admin = self.players[0]

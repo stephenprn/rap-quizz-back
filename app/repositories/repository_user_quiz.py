@@ -21,6 +21,8 @@ class UserQuizRepository(RepositoryBase):
         *args,
         **kwargs
     ):
+        query = self._filter_query_common(query, *args, **kwargs)
+
         if filter_quiz_id_in is not None:
             query = query.filter(self.model.quiz_id.in_(filter_quiz_id_in))
 

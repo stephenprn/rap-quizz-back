@@ -1,14 +1,16 @@
 from sqlalchemy.orm import relationship
-import enum
 
-from app.shared.db import db
+
+from app.utils.utils_python import OrderedEnum
 from app.utils import utils_hash
+from app.shared.db import db
 from app.shared.model import ModelBase
 
 
-class UserRole(enum.Enum):
-    ADMIN = "ADMIN"
-    USER = "USER"
+class UserRole(OrderedEnum):
+    SUPER_ADMIN = 3
+    ADMIN = 2
+    USER = 1
 
 
 class User(ModelBase):

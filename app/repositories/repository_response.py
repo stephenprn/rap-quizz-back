@@ -15,13 +15,14 @@ class ResponseRepository(RepositoryBase):
         filter_label: Optional[FilterLabel] = None,
         filter_hidden: Optional[bool] = None,
         filter_type_in: Optional[List[ResponseType]] = None,
-        filter_uuid_in: Optional[List[str]] = None,
         filter_search_text: Optional[str] = None,
         filter_id_not_in: Optional[List[int]] = None,
         filter_uuid_not_in: Optional[List[str]] = None,
         *args,
         **kwargs,
     ):
+        query = self._filter_query_common(query, *args, **kwargs)
+
         if filter_label is not None:
             if filter_label.ignore_case:
                 query = query.filter(
@@ -32,9 +33,6 @@ class ResponseRepository(RepositoryBase):
 
         if filter_type_in is not None:
             query = query.filter(self.model.type.in_(filter_type_in))
-
-        if filter_uuid_in is not None:
-            query = query.filter(self.model.uuid.in_(filter_uuid_in))
 
         if filter_search_text is not None:
             query = query.filter(

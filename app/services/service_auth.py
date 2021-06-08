@@ -97,7 +97,7 @@ def check_username(username: str) -> None:
 def has_role(role: app.models.UserRole = None):
     user = get_current_identity()
 
-    if user.role == role:
+    if user.role >= role:
         return True
 
     return False

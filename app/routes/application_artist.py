@@ -16,7 +16,7 @@ def hello():
 
 @application_artist.route("/list")
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 @pagination(20)
 @to_json(True)
 def list_artists(nbr_results: int, page_nbr: int):
@@ -25,7 +25,7 @@ def list_artists(nbr_results: int, page_nbr: int):
 
 @application_artist.route("/generate-questions", methods=["POST"])
 @jwt_required
-@has_role([UserRole.ADMIN])
+@has_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])
 def generate_questions():
     artist_uuid = request.json.get("artist_uuid")
 
