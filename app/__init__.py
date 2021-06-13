@@ -56,6 +56,7 @@ def create_app():
         from app.routes.application_user import application_user
         from app.routes.application_admin import application_admin
         from app.routes.application_artist import application_artist
+        from app.routes.application_task import application_task
 
         app.register_blueprint(application_auth, url_prefix="/auth")
         app.register_blueprint(application_quiz, url_prefix="/quiz")
@@ -65,6 +66,7 @@ def create_app():
         app.register_blueprint(application_user, url_prefix="/user")
         app.register_blueprint(application_admin, url_prefix="/admin")
         app.register_blueprint(application_artist, url_prefix="/artist")
+        app.register_blueprint(application_task, url_prefix="/task")
 
         db.create_all()  # Create sql tables for our data models
         init_users()
