@@ -24,6 +24,7 @@ RESPONSES_LIST_SEARCH_TXT_NBR_RESULTS = 5
 
 LABEL_MIN_LENGTH = 8
 LABEL_MAX_LENGTH = 100
+EXPLAINATION_MAX_LENGTH = 500
 
 YEAR_MIN = 1900
 YEAR_MAX = 2100
@@ -36,12 +37,21 @@ def add(
     label: str,
     response_type: ResponseType,
     ranking: bool,
-    true_response_uuid: str = None,
-    false_responses_uuid: List[str] = None,
-    ranked_responses_uuid: List[str] = None,
+    explaination: Optional[str] = None,
+    true_response_uuid: Optional[str] = None,
+    false_responses_uuid: Optional[List[str]] = None,
+    ranked_responses_uuid: Optional[List[str]] = None,
     year: str = None,
 ) -> Question:
-    check_length(label, "Label", LABEL_MIN_LENGTH, LABEL_MAX_LENGTH)
+    check_length(
+        label,
+        "Label",
+        min_length=LABEL_MIN_LENGTH,
+        max_length=LABEL_MAX_LENGTH)
+    check_length(
+        explaination,
+        "explaination",
+        max_length=EXPLAINATION_MAX_LENGTH)
 
     if response_type.is_regular and not ranking and not true_response_uuid:
         abort(400, "True response must be specified through true_response_uuid")
@@ -140,6 +150,9 @@ def add(
         QuestionSubType.UNKNOWN if not ranking else QuestionSubType.RANKING
     )
 
+    if explaination:
+        question.explaination = explaination
+
     if response_type.is_precise:
         question.response_precise = year
 
@@ -200,7 +213,9 @@ def edit(
     hidden: bool = None,
     label: str = None,
     ranking: bool = None,
+    explaination: Optional[str] = None,
     response_type: Optional[ResponseType] = None,
+    sub_type: Optional[QuestionSubType] = None,
     true_response_uuid: Optional[str] = None,
     false_responses_uuid: Optional[List[str]] = None,
     ranked_responses_uuid: List[str] = None,
@@ -215,16 +230,26 @@ def edit(
         abort(404, "Question not found")
 
     if label is not None:
-        check_length(label, "Label", LABEL_MIN_LENGTH, LABEL_MAX_LENGTH)
+        check_length(
+            label,
+            "Label",
+            min_length=LABEL_MIN_LENGTH,
+            max_length=LABEL_MAX_LENGTH)
 
     if hidden is not None:
         question.hidden = hidden
+
+    if explaination is not None:
+        question.explaination = explaination if explaination else None
 
     if label is not None:
         question.label = label
 
     if response_type is not None:
         question.type = response_type
+
+    if sub_type is not None:
+        question.sub_type = sub_type
 
     if question.type.is_precise:
         question.responses = []

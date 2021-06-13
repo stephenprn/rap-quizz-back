@@ -12,6 +12,7 @@ class QuestionSubType(enum.Enum):
     ARTIST_PICTURE = "ARTIST_PICTURE"
     RANKING = "RANKING"
     UNKNOWN = "UNKNOWN"
+    LYRICS = "LYRICS"
 
 
 class Question(ModelBase):
@@ -21,6 +22,7 @@ class Question(ModelBase):
     type = db.Column(db.Enum(ResponseType), nullable=False)
     picture = db.Column(db.String, nullable=True)
     sub_type = db.Column(db.Enum(QuestionSubType), nullable=False)
+    explaination = db.Column(db.Text, nullable=True)
 
     hidden = db.Column(db.Boolean, nullable=False)
 

@@ -1,3 +1,4 @@
+from app.services.service_question import LABEL_MAX_LENGTH, LABEL_MIN_LENGTH
 from flask import abort
 from typing import List
 
@@ -11,6 +12,9 @@ from app.utils.utils_query import FilterLabel
 repo_response = ResponseRepository()
 
 RESPONSES_LIST_SEARCH_TXT_NBR_RESULTS = 5
+
+RESPONSE_LABEL_MIN_LENGTH = 1
+RESPONSE_LABEL_MAX_LENGTH = 128
 
 RESPONSE_TYPE_MODEL_MAP = {
     ResponseType.ALBUM: Album,
@@ -32,6 +36,14 @@ def get_list_from_search_txt(
 
 
 def add_simple(label: str, type_: ResponseType) -> Response:
+    label = label.lower().strip()
+    check_length(
+        label,
+        "label",
+        min_length=RESPONSE_LABEL_MIN_LENGTH,
+        max_length=RESPONSE_LABEL_MAX_LENGTH,
+    )
+
     if (
         repo_response.get(
             filter_label=FilterLabel(label=label, ignore_case=True),
@@ -55,6 +67,14 @@ def add_simple(label: str, type_: ResponseType) -> Response:
 
 
 def add(response: Response):
+    response.label = response.label.lower().strip()
+    check_length(
+        response.label,
+        "label",
+        min_length=RESPONSE_LABEL_MIN_LENGTH,
+        max_length=RESPONSE_LABEL_MAX_LENGTH,
+    )
+
     if (
         repo_response.get(
             filter_label=FilterLabel(label=response.label, ignore_case=True),
@@ -87,7 +107,13 @@ def edit(response_uuid: str, hidden: bool = None, label: str = None):
         abort(404, "Response not found")
 
     if label is not None:
-        check_length(label, "Label", 1)
+        label = label.lower().strip()
+        check_length(
+            label,
+            "label",
+            min_length=RESPONSE_LABEL_MIN_LENGTH,
+            max_length=RESPONSE_LABEL_MAX_LENGTH,
+        )
         response.label = label
 
     if hidden is not None:

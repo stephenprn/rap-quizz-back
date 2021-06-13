@@ -238,6 +238,11 @@ def __finish_quiz(uuid: str, quiz_room: QuizRoom):
 
     for user_quiz in quiz.users:
         player = quiz_room.get_player(user_quiz.user.uuid)
+
+        # TODO: investigate why player can be None
+        if not player:
+            continue
+
         user_quiz.score = player.score
         user_quiz.user_leaved_quiz_status = QuizStatus.FINISHED
 

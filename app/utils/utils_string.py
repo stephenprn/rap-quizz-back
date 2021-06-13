@@ -1,3 +1,4 @@
+from typing import Optional
 from flask import abort
 import unicodedata
 import re
@@ -34,14 +35,15 @@ def normalize_string(text: str, replace_spaces: str = " ") -> str:
 
 
 def check_length(
-        text: str,
-        name: str,
-        min_length: int,
-        max_length: int = None) -> None:
+    text: str,
+    name: str,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+) -> None:
     if text is None:
         abort(400, "{} must be specified".format(name, str(min_length)))
 
-    if len(text) < min_length:
+    if min_length is not None and len(text) < min_length:
         abort(
             400,
             "{} must be at least {} characters long".format(

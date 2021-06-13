@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 
 from app.services import service_question
 from app.shared.annotations import pagination, to_json, has_role
-from app.models import UserRole, ResponseType
+from app.models import UserRole, ResponseType, QuestionSubType
 from app.utils.utils_string import get_array_from_delimited_list, to_bool
 
 application_question = Blueprint("application_question", __name__)
@@ -22,6 +22,7 @@ def hello():
 @to_json()
 def add_question():
     label = request.form.get("label")
+    explaination = request.form.get("explaination")
 
     if request.form.get("response_type") is not None:
         try:
@@ -47,6 +48,7 @@ def add_question():
         label,
         response_type,
         ranking,
+        explaination=explaination,
         true_response_uuid=true_response_uuid,
         false_responses_uuid=false_responses_uuid,
         ranked_responses_uuid=ranked_responses_uuid,
@@ -88,10 +90,25 @@ def edit(question_uuid: str):
     else:
         response_type = None
 
+    if request.form.get("sub_type") is not None:
+        try:
+            sub_type = QuestionSubType[request.form.get("sub_type")]
+        except Exception:
+            abort(
+                400,
+                f'Invalid response sub-type: {request.form.get("sub_type")}')
+    else:
+        sub_type = None
+
     if request.form.get("label") is not None:
         label = request.form.get("label")
     else:
         label = None
+
+    if request.form.get("explaination") is not None:
+        explaination = request.form.get("explaination")
+    else:
+        explaination = None
 
     if request.form.get("true_response_uuid") is not None:
         true_response_uuid = request.form.get("true_response_uuid")
@@ -127,11 +144,13 @@ def edit(question_uuid: str):
         question_uuid,
         hidden=hidden,
         ranking=ranking,
+        explaination=explaination,
         label=label,
         true_response_uuid=true_response_uuid,
         false_responses_uuid=false_responses_uuid,
         ranked_responses_uuid=ranked_responses_uuid,
         response_type=response_type,
+        sub_type=sub_type,
         year=year,
     )
 

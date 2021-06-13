@@ -42,15 +42,17 @@ def register(email: str, username: str, password: str) -> None:
     check_length(
         password,
         "Password",
-        PASSWORD_MIN_LENGTH,
-        PASSWORD_MAX_LENGTH)
+        min_length=PASSWORD_MIN_LENGTH,
+        max_length=PASSWORD_MAX_LENGTH,
+    )
     check_length(
         username,
         "Username",
-        USERNAME_MIN_LENGTH,
-        USERNAME_MAX_LENGTH)
+        min_length=USERNAME_MIN_LENGTH,
+        max_length=USERNAME_MAX_LENGTH,
+    )
 
-    email = email.lower()
+    email = email.lower().strip()
 
     email_exists = (
         db.session.query(app.models.User.id)
@@ -108,7 +110,7 @@ def has_role(role: app.models.UserRole = None):
 
 def authenticate(email: str, password: str, with_id: bool = True) -> dict:
     hash_password(password)
-    email = email.lower()
+    email = email.lower().strip()
 
     user = db.session.query(app.models.User).filter_by(email=email).first()
 

@@ -1,5 +1,7 @@
 from typing import List
 
+from flask import abort
+
 from app.shared.db import db
 from app.models import (
     Artist,
