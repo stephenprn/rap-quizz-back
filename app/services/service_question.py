@@ -14,7 +14,7 @@ from app.models import (
 )
 from app.services.service_quiz import QUIZ_DEFAULT_NBR_RESPONSES
 
-from app.utils.utils_query import FilterLabel
+from app.utils.utils_query import FilterText
 from app.utils.utils_string import check_length
 
 repo_question = QuestionRepository()
@@ -102,7 +102,7 @@ def add(
             abort(400, f"Year must be between {YEAR_MIN} and {YEAR_MAX}")
 
     if repo_question.get(
-        filter_label=FilterLabel(
+        filter_label=FilterText(
             label=label,
             ignore_case=True)):
         abort(409, "This question already exists")

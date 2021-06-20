@@ -1,6 +1,8 @@
 from sqlalchemy.orm import joinedload, load_only
 from typing import List, Optional
 
+from sqlalchemy.orm.query import Query
+
 from app.shared.repository import RepositoryBase
 
 from app.models import Quiz, UserQuiz
@@ -20,7 +22,7 @@ class UserQuizRepository(RepositoryBase):
         filter_null_user_leaved_quiz_status: Optional[bool] = None,
         *args,
         **kwargs
-    ):
+    ) -> Query:
         query = self._filter_query_common(query, *args, **kwargs)
 
         if filter_quiz_id_in is not None:
@@ -54,7 +56,7 @@ class UserQuizRepository(RepositoryBase):
         load_only_quiz_infos: Optional[bool] = None,
         *args,
         **kwargs
-    ):
+    ) -> Query:
         if load_only_status_username:
             query = query.options(
                 load_only("status", "creation_date").options(

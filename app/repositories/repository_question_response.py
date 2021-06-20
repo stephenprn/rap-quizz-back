@@ -1,6 +1,7 @@
 from typing import Optional, List
 
 from sqlalchemy.orm import joinedload, load_only
+from sqlalchemy.orm.query import Query
 
 from app.shared.repository import RepositoryBase
 
@@ -16,7 +17,7 @@ class QuestionResponseRepository(RepositoryBase):
             query,
             load_only_response_label: Optional[bool] = False,
             *args,
-            **kwargs):
+            **kwargs) -> Query:
         if load_only_response_label:
             query = query.join(
                 self.model.response).options(
@@ -35,7 +36,7 @@ class QuestionResponseRepository(RepositoryBase):
         filter_response_id_not_in: Optional[List[int]] = None,
         *args,
         **kwargs
-    ):
+    ) -> Query:
         if filter_response_type_in is not None:
             query = query.join(self.model.response).filter(
                 Response.type.in_(filter_response_type_in)

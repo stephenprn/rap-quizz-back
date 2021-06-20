@@ -1,9 +1,11 @@
 from typing import Optional, List
 
+from sqlalchemy.orm.query import Query
+
 from app.shared.repository import RepositoryBase
 
 from app.models import Response, ResponseType
-from app.utils.utils_query import FilterLabel
+from app.utils.utils_query import FilterText
 
 
 class ResponseRepository(RepositoryBase):
@@ -12,31 +14,25 @@ class ResponseRepository(RepositoryBase):
     def _filter_query(
         self,
         query,
-        filter_label: Optional[FilterLabel] = None,
+        filter_label: Optional[FilterText] = None,
         filter_hidden: Optional[bool] = None,
         filter_type_in: Optional[List[ResponseType]] = None,
-        filter_search_text: Optional[str] = None,
         filter_id_not_in: Optional[List[int]] = None,
         filter_uuid_not_in: Optional[List[str]] = None,
         *args,
         **kwargs,
-    ):
+    ) -> Query:
         query = self._filter_query_common(query, *args, **kwargs)
 
         if filter_label is not None:
-            if filter_label.ignore_case:
-                query = query.filter(
-                    self.model.label.ilike(
-                        filter_label.label))
-            else:
-                query = query.filter(self.model.label == filter_label.label)
+            query = self._apply_filter_text(
+                query, self.model.label, filter_label)
 
         if filter_type_in is not None:
             query = query.filter(self.model.type.in_(filter_type_in))
 
-        if filter_search_text is not None:
-            query = query.filter(
-                self.model.label.ilike(f"%{filter_search_text}%"))
+        if filter_label is not None:
+            query = query.filter(self.model.label.ilike(f"%{filter_label}%"))
 
         if filter_id_not_in is not None:
             query = query.filter(self.model.id.notin_(filter_id_not_in))

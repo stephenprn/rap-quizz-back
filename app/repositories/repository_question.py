@@ -2,6 +2,7 @@ from typing import Optional, List
 from sqlalchemy.orm import joinedload
 
 from sqlalchemy import and_, or_
+from sqlalchemy.orm.query import Query
 
 from app.shared.db import db
 from app.shared.repository import RepositoryBase
@@ -13,7 +14,7 @@ from app.models import (
     QuestionSubType,
     Response,
 )
-from app.utils.utils_query import FilterLabel
+from app.utils.utils_query import FilterText
 
 
 class QuestionRepository(RepositoryBase):
@@ -22,7 +23,7 @@ class QuestionRepository(RepositoryBase):
     def _filter_query(
         self,
         query,
-        filter_label: Optional[FilterLabel] = None,
+        filter_label: Optional[FilterText] = None,
         filter_uuid_in: Optional[List[str]] = None,
         filter_type_in: Optional[List[ResponseType]] = None,
         filter_sub_type_in: Optional[List[QuestionSubType]] = None,
@@ -32,16 +33,12 @@ class QuestionRepository(RepositoryBase):
         filter_question_id_not_in: Optional[List[int]] = None,
         *args,
         **kwargs
-    ):
+    ) -> Query:
         query = self._filter_query_common(query, *args, **kwargs)
 
         if filter_label is not None:
-            if filter_label.ignore_case:
-                query = query.filter(
-                    self.model.label.ilike(
-                        filter_label.label))
-            else:
-                query = query.filter(self.model.label == filter_label.label)
+            query = self._apply_filter_text(
+                query, self.model.label, filter_label)
 
         if filter_uuid_in is not None:
             query = query.filter(self.model.uuid.in_(filter_uuid_in))
@@ -88,7 +85,7 @@ class QuestionRepository(RepositoryBase):
         load_full_response: Optional[bool] = False,
         *args,
         **kwargs
-    ):
+    ) -> Query:
         if load_full_response:
             query = query.outerjoin(
                 self.model.responses).options(

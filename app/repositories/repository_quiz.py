@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.query import Query
 
 from app.shared.repository import RepositoryBase
 
@@ -12,7 +13,7 @@ class QuizRepository(RepositoryBase):
 
     def _filter_query(
         self, query, filter_url_in: Optional[List[str]] = None, *args, **kwargs
-    ):
+    ) -> Query:
         query = self._filter_query_common(query, *args, **kwargs)
 
         if filter_url_in is not None:
@@ -22,7 +23,7 @@ class QuizRepository(RepositoryBase):
 
     def _load_only(
         self, query, load_only_users: Optional[bool] = False, *args, **kwargs
-    ):
+    ) -> Query:
         if load_only_users:
             query = query.join(
                 self.model.users).options(

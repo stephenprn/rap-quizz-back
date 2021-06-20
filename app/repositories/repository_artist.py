@@ -1,5 +1,7 @@
 from typing import List
 
+from sqlalchemy.orm.query import Query
+
 from app.shared.repository import RepositoryBase
 
 from app.models import Artist
@@ -10,7 +12,7 @@ class ArtistRepository(RepositoryBase):
 
     def _filter_query(
         self, query, filter_genius_id_in: List[int] = None, *args, **kwargs
-    ):
+    ) -> Query:
         query = self._filter_query_common(query, *args, **kwargs)
 
         if filter_genius_id_in is not None:

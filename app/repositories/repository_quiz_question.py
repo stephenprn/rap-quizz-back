@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.query import Query
 
 from app.shared.repository import RepositoryBase
 
@@ -16,7 +17,7 @@ class QuizQuestionRepository(RepositoryBase):
                       query,
                       filter_quiz_uuid_in: Optional[List[str]] = None,
                       *args,
-                      **kwargs):
+                      **kwargs) -> Query:
         if filter_quiz_uuid_in is not None:
             query = query.join(self.model.quiz).filter(
                 Quiz.uuid.in_(filter_quiz_uuid_in)
@@ -29,7 +30,7 @@ class QuizQuestionRepository(RepositoryBase):
             query,
             load_only_response_label: Optional[bool] = False,
             *args,
-            **kwargs):
+            **kwargs) -> Query:
         if load_only_response_label:
             query = query.options(
                 joinedload(

@@ -1,4 +1,3 @@
-from app.services.service_question import LABEL_MAX_LENGTH, LABEL_MIN_LENGTH
 from flask import abort
 from typing import List
 
@@ -7,7 +6,7 @@ from app.shared.db import db
 from app.repositories import ResponseRepository
 from app.models import Response, ResponseType, Album, Artist, Song
 from app.utils.utils_string import normalize_string, check_length
-from app.utils.utils_query import FilterLabel
+from app.utils.utils_query import FilterText
 
 repo_response = ResponseRepository()
 
@@ -28,7 +27,10 @@ def get_list_from_search_txt(
 ) -> Response:
     search_txt = normalize_string(search_txt)
     return repo_response.list_(
-        filter_search_text=search_txt,
+        filter_label=FilterText(
+            label=search_txt,
+            ignore_case=True,
+            partial_match=True),
         filter_type_in=[type_],
         filter_uuid_not_in=responses_uuid_exclude,
         nbr_results=RESPONSES_LIST_SEARCH_TXT_NBR_RESULTS,
@@ -46,7 +48,7 @@ def add_simple(label: str, type_: ResponseType) -> Response:
 
     if (
         repo_response.get(
-            filter_label=FilterLabel(label=label, ignore_case=True),
+            filter_label=FilterText(label=label, ignore_case=True),
             filter_type_in=[type_],
         )
         is not None
@@ -67,7 +69,7 @@ def add_simple(label: str, type_: ResponseType) -> Response:
 
 
 def add(response: Response):
-    response.label = response.label.lower().strip()
+    response.label = response.label.strip()
     check_length(
         response.label,
         "label",
@@ -77,7 +79,7 @@ def add(response: Response):
 
     if (
         repo_response.get(
-            filter_label=FilterLabel(label=response.label, ignore_case=True),
+            filter_label=FilterText(label=response.label, ignore_case=True),
             filter_type_in=[response.type],
         )
         is not None

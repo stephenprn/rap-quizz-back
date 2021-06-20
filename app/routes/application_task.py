@@ -1,9 +1,10 @@
 import threading
 import time
+from datetime import timedelta
 
 from flask import Blueprint, abort, current_app
 from flask.helpers import url_for
-from app.utils.utils_query import async_tasks
+from app.utils.utils_request import async_tasks
 
 from app.utils import utils_date
 
@@ -23,7 +24,7 @@ def before_first_request():
         while True:
             # Only keep tasks that are running or that finished less than 10
             # minutes ago.
-            ten_min_ago = utils_date.get_current_date() - 10 * 60
+            ten_min_ago = utils_date.get_current_date() - timedelta(minutes=-10)
             async_tasks = {
                 id: task
                 for id, task in async_tasks.items()

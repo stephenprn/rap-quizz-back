@@ -1,3 +1,4 @@
+from app.utils.utils_query import FilterInt, FilterText
 from typing import Optional, List
 
 from sqlalchemy.sql.expression import func
@@ -57,7 +58,7 @@ class RepositoryBase:
         order_update_date: Optional[bool] = None,
         order_random: Optional[bool] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         if order_random:
             query = query.order_by(func.random())
@@ -86,13 +87,48 @@ class RepositoryBase:
         filter_uuid_in: Optional[List[str]] = None,
         filter_id_in: Optional[List[int]] = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         if filter_uuid_in is not None:
             query = query.filter(self.model.uuid.in_(filter_uuid_in))
 
         if filter_id_in is not None:
             query = query.filter(self.model.id.in_(filter_id_in))
+
+        return query
+
+    def _apply_filter_int(self, query, field, filter_int: FilterInt) -> Query:
+        if filter_int.min_value is not None:
+            if filter_int.min_strict:
+                query = query.filter(field > filter_int.min_value)
+            else:
+                query = query.filter(field >= filter_int.min_value)
+
+        if filter_int.max_value is not None:
+            if filter_int.max_strict:
+                query = query.filter(field < filter_int.max_value)
+            else:
+                query = query.filter(field <= filter_int.max_value)
+
+        return query
+
+    def _apply_filter_text(
+            self,
+            query,
+            field,
+            filter_text: FilterText) -> Query:
+        if filter_text.text is None:
+            return query
+
+        if filter_text.partial_match:
+            content = f"%{filter_text.text}%"
+        else:
+            content = filter_text.text
+
+        if filter_text.ignore_case:
+            query = query.filter(field.ilike(content))
+        else:
+            query = query.filter(field.like(content))
 
         return query
 
@@ -103,7 +139,7 @@ class RepositoryBase:
         page_nbr: Optional[int] = None,
         with_nbr_results: bool = False,
         *args,
-        **kwargs
+        **kwargs,
     ) -> Query:
         if with_nbr_results:
             res = query.paginate(
