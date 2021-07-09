@@ -28,7 +28,7 @@ def get_list_from_search_txt(
     search_txt = normalize_string(search_txt)
     return repo_response.list_(
         filter_label=FilterText(
-            label=search_txt,
+            text=search_txt,
             ignore_case=True,
             partial_match=True),
         filter_type_in=[type_],
@@ -48,7 +48,7 @@ def add_simple(label: str, type_: ResponseType) -> Response:
 
     if (
         repo_response.get(
-            filter_label=FilterText(label=label, ignore_case=True),
+            filter_label=FilterText(text=label, ignore_case=True),
             filter_type_in=[type_],
         )
         is not None
@@ -79,7 +79,7 @@ def add(response: Response):
 
     if (
         repo_response.get(
-            filter_label=FilterText(label=response.label, ignore_case=True),
+            filter_label=FilterText(text=response.label, ignore_case=True),
             filter_type_in=[response.type],
         )
         is not None

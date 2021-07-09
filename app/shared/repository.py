@@ -1,10 +1,10 @@
-from app.utils.utils_query import FilterInt, FilterText
 from typing import Optional, List
 
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm.query import Query
 from sqlalchemy import desc, asc
 
+from app.utils.utils_query import ArgsKwargs, FilterInt, FilterText
 from app.shared.db import db
 
 
@@ -15,10 +15,23 @@ class RepositoryBase:
 
     def list_(self, *args, **kwargs):
         query = self.model.query
+        query = self._build_query(query, *args, **kwargs)
 
-        query = self._filter_query(query, *args, **kwargs)
-        query = self._load_only(query, *args, **kwargs)
-        query = self._sort_query(query, *args, **kwargs)
+        return self._execute(query, *args, **kwargs)
+
+    def list_union(self, args_kwargs: List[ArgsKwargs], *args, **kwargs):
+        query = self.model.query
+
+        for ak in args_kwargs:
+            query = query.union(
+                self._build_query(
+                    self.model.query,
+                    *(ak.get("args") or {}),
+                    **(ak.get("kwargs") or {}),
+                )
+            )
+
+        query = self._build_query(query, *args, **kwargs)
 
         return self._execute(query, *args, **kwargs)
 
@@ -40,6 +53,13 @@ class RepositoryBase:
         elt = self.model(*args, **kwargs)
         db.session.add(elt)
         db.session.commit()
+
+    def _build_query(self, query, *args, **kwargs):
+        query = self._filter_query(query, *args, **kwargs)
+        query = self._load_only(query, *args, **kwargs)
+        query = self._sort_query(query, *args, **kwargs)
+
+        return query
 
     def _filter_query(self, query, *args, **kwargs):
         return self._filter_query_common(query, *args, **kwargs)

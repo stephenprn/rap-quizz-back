@@ -1,12 +1,12 @@
-from app.models.question import QuestionSubType
-from app.models.response import ResponseType
 from flask import abort
 from sqlalchemy.orm import load_only
 from sqlalchemy import desc
 from random import shuffle
 from typing import List
+from math import floor
 
 
+from app.utils.utils_query import ArgsKwargs
 from app.utils.utils_string import (
     normalize_string,
     generate_random_string,
@@ -35,6 +35,8 @@ from app.models import (
     QuizStatus,
     Question,
     Response,
+    ResponseType,
+    QuestionSubType,
 )
 
 repo_quiz = QuizRepository()
@@ -171,7 +173,23 @@ def leave_quiz(quiz_uuid: str, quiz_status: QuizStatus) -> None:
 def __generate_questions(
     quiz: Quiz, nbr_questions: int, exclude_questions_ids: List[id] = None
 ) -> List[Question]:
-    questions = repo_question.list_(
+    # get all question types
+    args_kwargs: List[ArgsKwargs] = []
+
+    for i, type_ in enumerate(ResponseType):
+        if i != len(ResponseType) - 1:
+            nbr_results = floor(nbr_questions / len(ResponseType))
+        else:
+            nbr_results = nbr_questions % len(ResponseType)
+
+        args_kwargs.append(
+            ArgsKwargs(
+                kwargs={
+                    "filter_type_in": [type_],
+                    "nbr_results": nbr_results}))
+
+    questions = repo_question.list_union(
+        args_kwargs,
         nbr_results=nbr_questions,
         order_random=True,
         load_only_response_label=True,

@@ -1,6 +1,7 @@
-from app.utils.utils_query import FilterInt
+from typing import Optional
 from werkzeug import exceptions
 
+from app.shared.db import db
 from app.services import service_response
 from app.models import Artist
 from app.repositories import ArtistRepository, SongRepository
@@ -13,10 +14,8 @@ from app.crawlers.rapgenius import (
 repo_artist = ArtistRepository()
 repo_song = SongRepository()
 
-MAX_SONGS_PER_ARTIST = 5
 
-
-def crawl_artist_full(id_: int) -> Artist:
+def crawl_artist_full(id_: int, nbr_songs_max: Optional[int] = 5) -> Artist:
     artist = repo_artist.get(filter_genius_id_in=[id_])
 
     if not artist:
@@ -29,12 +28,12 @@ def crawl_artist_full(id_: int) -> Artist:
 
     songs = ArtistSongsCrawler().get([id_])
 
-    # for now, we just get top5 songs and add it
-    songs = sorted(
-        songs,
-        lambda song: -
-        song.genius_pageviews)[
-        :MAX_SONGS_PER_ARTIST]
+    songs = sorted(songs, lambda song: -song.genius_pageviews)
+
+    for song in songs[nbr_songs_max:]:
+        db.session.delete(song)
+
+    songs = songs[:nbr_songs_max]
 
     for song in songs:
         try:

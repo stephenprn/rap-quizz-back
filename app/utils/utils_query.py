@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Any, Dict, Optional
+from typing_extensions import TypedDict
 
 
 class FilterText:
@@ -34,3 +35,8 @@ class FilterInt:
         self.max_value = max_value
         self.min_strict = min_strict
         self.max_strict = max_strict
+
+
+class ArgsKwargs(TypedDict):
+    args: Optional[Dict[str, Any]]
+    kwargs: Optional[Dict[str, Any]]

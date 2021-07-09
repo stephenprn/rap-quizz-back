@@ -103,7 +103,7 @@ def add(
 
     if repo_question.get(
         filter_label=FilterText(
-            label=label,
+            text=label,
             ignore_case=True)):
         abort(409, "This question already exists")
 
